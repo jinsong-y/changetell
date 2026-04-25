@@ -92,18 +92,18 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ delay: 0.8, duration: 1 }} 
-            className="text-[#7aa2f7]/80 text-sm leading-relaxed"
+            className="text-[#73daca] text-base"
           >
-            “初筮告，再三渎，渎则不告。”<br/>
-            同一个时辰内，天机已现，无需反复推演。
+            请在此默念所求之事...
           </motion.div>
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ delay: 1.3, duration: 1 }} 
-            className="text-[#73daca] text-base"
+            className="text-[#7aa2f7]/60 text-xs leading-relaxed"
           >
-            请在此默念所求之事...
+            “初筮告，再三渎，渎则不告。”<br/>
+            同一时辰内，不要反复起卦。
           </motion.div>
             
             <motion.div 
