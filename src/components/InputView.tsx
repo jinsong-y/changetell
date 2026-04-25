@@ -17,24 +17,28 @@ const HEXAGRAMS: Record<string, Record<string, string>> = {
   '地': { '天': '地天泰', '泽': '地泽临', '火': '地火明夷', '雷': '地雷复', '风': '地风升', '水': '地水师', '山': '地山谦', '地': '坤为地' }
 };
 
-export default function InputView({ onCast }: { onCast: () => void }) {
+export default function InputView({ onCast }: { onCast: (prompt: string, timestamp: string) => void }) {
   const [inputVal, setInputVal] = useState('');
-  const [lines, setLines] = useState<('yin' | 'yang')[]>(Array(6).fill('yang'));
   const [animKey, setAnimKey] = useState(0);
+
+  // 仅保留视觉动画，不作为实际计算依据
+  const [visualLines, setVisualLines] = useState<number[]>([7, 8, 7, 8, 7, 8]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setLines(Array(6).fill(null).map(() => Math.random() > 0.5 ? 'yang' : 'yin'));
+      setVisualLines(Array(6).fill(0).map(() => Math.random() > 0.5 ? 7 : 8));
       setAnimKey(prev => prev + 1);
     }, 6000);
     return () => clearInterval(interval);
   }, []);
 
-  const upperCode = lines.slice(0, 3).map(l => l === 'yang' ? '1' : '0').join('');
-  const lowerCode = lines.slice(3, 6).map(l => l === 'yang' ? '1' : '0').join('');
-  const upperTri = TRIGRAMS[upperCode];
-  const lowerTri = TRIGRAMS[lowerCode];
-  const hexName = HEXAGRAMS[upperTri][lowerTri];
+  const handleCastClick = () => {
+    if (inputVal.trim()) {
+      const now = new Date();
+      // 传递本地 ISO 时间字符串，以便后端进行梅花易数推演
+      onCast(inputVal, now.toLocaleString('zh-CN', { hour12: false }));
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -100,8 +104,8 @@ export default function InputView({ onCast }: { onCast: () => void }) {
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && inputVal.trim() !== '') {
-                      onCast();
+                    if (e.key === 'Enter') {
+                      handleCastClick();
                     }
                   }}
                   autoFocus
@@ -133,16 +137,21 @@ export default function InputView({ onCast }: { onCast: () => void }) {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="flex flex-col gap-3 w-full max-w-[160px]"
             >
-              {lines.map((line, idx) => (
-                line === 'yin' ? (
-                  <div key={idx} className="flex gap-4 w-full h-5">
-                    <div className="flex-1 hex-bar-tertiary" style={{ animationDuration: '4.5s' }}></div>
-                    <div className="flex-1 hex-bar-tertiary" style={{ animationDuration: '4.5s' }}></div>
+              {lines.map((line, idx) => {
+                const isYin = line === 6 || line === 8;
+                const isMoving = line === 6 || line === 9;
+                return isYin ? (
+                  <div key={idx} className="flex gap-4 w-full h-5 relative group/line">
+                    <div className={`flex-1 ${isMoving ? 'bg-[#f7768e]' : 'hex-bar-tertiary'}`}></div>
+                    <div className={`flex-1 ${isMoving ? 'bg-[#f7768e]' : 'hex-bar-tertiary'}`}></div>
+                    {isMoving && <span className="absolute -right-6 text-[#f7768e] text-xs">●</span>}
                   </div>
                 ) : (
-                  <div key={idx} className="w-full h-5 hex-bar-primary" style={{ animationDuration: '4.5s' }}></div>
-                )
-              ))}
+                  <div key={idx} className={`w-full h-5 relative group/line ${isMoving ? 'bg-[#e0af68]' : 'hex-bar-primary'}`}>
+                    {isMoving && <span className="absolute -right-6 text-[#e0af68] text-xs">○</span>}
+                  </div>
+                );
+              })}
             </motion.div>
           </AnimatePresence>
 
@@ -165,7 +174,7 @@ export default function InputView({ onCast }: { onCast: () => void }) {
             whileHover={inputVal.trim() ? { scale: 1.02, backgroundColor: "#73daca", color: "#1a1b26", boxShadow: "0 0 20px rgba(115, 218, 202, 0.4)" } : {}}
             whileTap={inputVal.trim() ? { scale: 0.98 } : {}}
             transition={{ ease: "easeOut", duration: 0.2 }}
-            onClick={onCast}
+            onClick={handleCastClick}
             disabled={!inputVal.trim()}
             className="pulse-effect disabled:opacity-50 disabled:[animation:none] disabled:border-[#565f89] disabled:text-[#565f89] disabled:cursor-not-allowed border border-[#73daca] bg-[#1a1b26] text-[#73daca] text-xl font-bold py-4 px-12 tracking-widest uppercase transition-colors duration-300"
           >

@@ -6,12 +6,29 @@ import LoadingView from './components/LoadingView';
 
 export default function App() {
   const [view, setView] = useState<'input' | 'loading' | 'result'>('input');
-  
-  const handleCast = () => {
+  const [resultData, setResultData] = useState<any>(null);
+  const [error, setError] = useState('');
+
+  const handleCast = async (prompt: string, timestamp: string) => {
     setView('loading');
-    setTimeout(() => {
+    setError('');
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, timestamp }),
+      });
+      
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      
+      setResultData(data);
       setView('result');
-    }, 3000);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || '获取解析失败，请重试');
+      setView('input');
+    }
   };
 
   return (
@@ -19,9 +36,10 @@ export default function App() {
       <Header onViewChange={() => setView('input')} />
       
       <main className="flex-grow p-4 md:p-6 pb-6 max-w-7xl mx-auto w-full">
+        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-center">{error}</div>}
         {view === 'input' && <InputView onCast={handleCast} />}
         {view === 'loading' && <LoadingView />}
-        {view === 'result' && <ResultView onRestart={() => setView('input')} />}
+        {view === 'result' && <ResultView data={resultData} onRestart={() => setView('input')} />}
       </main>
     </div>
   );
