@@ -32,6 +32,12 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
     return () => clearInterval(interval);
   }, []);
 
+  const upperCode = visualLines.slice(0, 3).map(l => l >= 8 ? '0' : '1').join('');
+  const lowerCode = visualLines.slice(3, 6).map(l => l >= 8 ? '0' : '1').join('');
+  const upperTri = TRIGRAMS[upperCode];
+  const lowerTri = TRIGRAMS[lowerCode];
+  const hexName = HEXAGRAMS[upperTri][lowerTri];
+
   const handleCastClick = () => {
     if (inputVal.trim()) {
       const now = new Date();
@@ -137,7 +143,7 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="flex flex-col gap-3 w-full max-w-[160px]"
             >
-              {lines.map((line, idx) => {
+              {visualLines.map((line, idx) => {
                 const isYin = line === 6 || line === 8;
                 const isMoving = line === 6 || line === 9;
                 return isYin ? (

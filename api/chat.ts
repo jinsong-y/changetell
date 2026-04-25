@@ -14,8 +14,10 @@ export default async function handler(req: any, res: any) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
+    
+    // 尝试使用用户建议的 3.1 Preview 名称
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-flash-lite", 
+      model: "gemini-3.1-flash-lite-preview", 
       generationConfig: {
         responseMimeType: "application/json",
       }
@@ -51,6 +53,6 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json(JSON.parse(text));
   } catch (error: any) {
     console.error("Gemini Error:", error);
-    return res.status(500).json({ error: "天机难测，请稍后再试" });
+    return res.status(500).json({ error: error.message || "天机难测，请稍后再试" });
   }
 }
