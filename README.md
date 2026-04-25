@@ -51,3 +51,4 @@ The project is optimized for deployment on **Vercel**.
 1. Clone the repository.
 2. Set up `GOOGLE_GENERATIVE_AI_API_KEY` in your environment variables.
 3. Push to Vercel.
+\n<!-- Deployment Fix -->
