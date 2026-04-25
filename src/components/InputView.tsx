@@ -84,7 +84,7 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ delay: 0.3, duration: 1 }} 
-            className="text-[#73daca] text-base"
+            className="text-[#73daca] text-base font-medium"
           >
             凡占卜者，必诚心正意。
           </motion.div>
@@ -92,6 +92,15 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ delay: 0.8, duration: 1 }} 
+            className="text-[#7aa2f7]/80 text-sm leading-relaxed"
+          >
+            “初筮告，再三渎，渎则不告。”<br/>
+            同一个时辰内，天机已现，无需反复推演。
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: 1.3, duration: 1 }} 
             className="text-[#73daca] text-base"
           >
             请在此默念所求之事...
