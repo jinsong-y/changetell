@@ -114,7 +114,7 @@ const CONTROLS: Record<ElementName, ElementName> = {
 };
 
 export function normalizeTrigramIndex(index: number): number {
-  const normalized = index % 8;
+  const normalized = ((index % 8) + 8) % 8;
   return normalized === 0 ? 8 : normalized;
 }
 
@@ -210,7 +210,7 @@ export function castMeihua(timestamp?: string | number | Date): CastResult {
   const lunar = solar.getLunar();
 
   const yearZhiIndex = lunar.getYearZhiIndex() + 1;
-  const month = lunar.getMonth();
+  const month = Math.abs(lunar.getMonth());
   const day = lunar.getDay();
   const hourZhiIndex = lunar.getTimeZhiIndex() + 1;
 

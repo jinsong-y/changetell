@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   analyzeRelation,
+  castMeihua,
   getBodyUseRoles,
   getSeasonalAnalysis,
   getTrigramElement,
@@ -38,5 +39,11 @@ assert.equal(getSeasonalAnalysis('火', 5).strength, '旺');
 assert.equal(getSeasonalAnalysis('金', 8).strength, '旺');
 assert.equal(getSeasonalAnalysis('水', 11).strength, '旺');
 assert.equal(getSeasonalAnalysis('土', 6).strength, '旺');
+
+const leapMonthCast = castMeihua(new Date('2020-05-23T12:00:00+08:00'));
+assert.ok(leapMonthCast.mainHex.name);
+assert.ok(leapMonthCast.body);
+assert.ok(leapMonthCast.use);
+assert.ok(leapMonthCast.relation);
 
 console.log('meihua deterministic rules passed');
