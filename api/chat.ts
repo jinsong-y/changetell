@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { castMeihua } from "../src/utils/meihua";
+import { castMeihua } from "./meihua.js";
 
 const RELATION_SUMMARY: Record<string, string> = {
   比和: '体用同气，主客同频，事情较易相合。',
