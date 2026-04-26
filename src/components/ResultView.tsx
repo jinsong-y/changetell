@@ -1,4 +1,4 @@
-import { Loader2, RefreshCw, CheckCircle2, Grid, Compass, List, BookOpen, Activity, Waypoints, Zap, Star } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getBinaryByHexName } from '../utils/iching';
 
@@ -57,17 +57,63 @@ interface HexInfo {
   meaning: string;
 }
 
+interface TrigramRole {
+  name: string;
+  position: 'upper' | 'lower';
+  element: string;
+  role: '体' | '用';
+  description: string;
+}
+
+interface RelationAnalysis {
+  relation: string;
+  status: string;
+  summary: string;
+}
+
+interface SeasonalAnalysis {
+  bodyElement: string;
+  season: string;
+  strength: string;
+  summary: string;
+}
+
+interface OmenAnalysis {
+  used: false;
+  summary: string;
+}
+
 interface DivinationResult {
   timeAnalysis: string;
+  formula?: string;
   mainHex: HexInfo;
   mutualHex: HexInfo;
   changedHex: HexInfo;
-  movingLines: string;
-  judgment: string;
+  movingLine?: number;
+  body: TrigramRole;
+  use: TrigramRole;
+  relation: RelationAnalysis;
+  seasonal: SeasonalAnalysis;
+  omen: OmenAnalysis;
+  bodyUseAnalysis: string;
+  fiveElementAnalysis: string;
+  seasonalAnalysis: string;
+  omenAnalysis: string;
   meaning: string;
   advice: string;
   overallStatus: string;
 }
+
+const positionLabel = (position: 'upper' | 'lower') => position === 'upper' ? '上卦' : '下卦';
+
+const SectionLabel = ({ step, title, tone }: { step: string; title: string; tone: string }) => (
+  <div className="bg-[#24283b] border-b border-[#414868] px-3 py-2 flex items-center justify-between">
+    <span className="text-xs font-medium text-[#c0caf5] tracking-widest flex items-center gap-2">
+      <span className={`text-[10px] border px-2 py-0.5 ${tone}`}>{step}</span>
+      {title}
+    </span>
+  </div>
+);
 
 export default function ResultView({ data, onRestart }: { data: DivinationResult, onRestart: () => void }) {
   if (!data) return null;
@@ -90,6 +136,18 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
           <span className="w-4 text-center">·</span>
           <span>时间起卦：{data.timeAnalysis}</span>
         </div>
+        {data.formula && (
+          <div className="text-xs font-medium text-[#565f89] flex items-center gap-2 opacity-80">
+            <span className="w-4 text-center">·</span>
+            <span>推演公式：{data.formula}</span>
+          </div>
+        )}
+        {data.movingLine && (
+          <div className="text-xs font-medium text-[#e0af68] flex items-center gap-2 opacity-90">
+            <span className="w-4 text-center">·</span>
+            <span>动爻：第{data.movingLine}爻</span>
+          </div>
+        )}
       </motion.section>
 
       {/* Data Layout */}
@@ -98,109 +156,101 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
         {/* Analyses */}
         <div className="flex flex-col gap-6">
           
-          {/* Main Hexagram Analysis */}
+          {/* Step 01: Three Hexagrams */}
           <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#7aa2f7]/40 transition-colors duration-500">
-            <div className="bg-[#24283b] border-b border-[#414868] px-3 py-2 flex items-center justify-between">
-              <span className="text-xs font-medium text-[#c0caf5] tracking-widest flex items-center gap-2">
-                <Grid className="w-4 h-4 group-hover:text-[#7aa2f7] transition-colors" />
-                主卦 -- 事之初
-              </span>
-              <span className="text-[10px] text-[#565f89] italic">代表当前局势与事物的初始状态</span>
-            </div>
-            <div className="p-0 sm:p-6 flex flex-col sm:flex-row gap-0 sm:gap-6 items-stretch">
-              <div className="w-full sm:w-[260px] shrink-0 border-b border-[#414868]/50 sm:border-b-0">
-                <BigHexagram name={data.mainHex.name} title={data.mainHex.name} subtitle="现状之象" />
+            <SectionLabel step="01" title="排出三卦" tone="border-[#7aa2f7] text-[#7aa2f7]" />
+            <div className="grid grid-cols-1 xl:grid-cols-3">
+              <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50">
+                <BigHexagram name={data.mainHex.name} title={data.mainHex.name} subtitle="主卦 -- 开始/当前" />
+                <div className="p-6 border-t border-[#414868]/50">
+                  <p className="text-sm text-[#8a98c9] leading-relaxed">{data.mainHex.meaning}</p>
+                </div>
               </div>
-              <div className="flex-1 p-6 sm:p-0 flex flex-col justify-center">
-                <h3 className="text-xl font-bold text-[#7aa2f7] mb-4">{data.mainHex.name}</h3>
-                <p className="text-sm text-[#8a98c9] leading-relaxed">
-                  {data.mainHex.meaning}
-                </p>
+              <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50">
+                <BigHexagram name={data.mutualHex.name} title={data.mutualHex.name} subtitle="互卦 -- 中间/隐情" />
+                <div className="p-6 border-t border-[#414868]/50">
+                  <p className="text-sm text-[#8a98c9] leading-relaxed">{data.mutualHex.meaning}</p>
+                </div>
+              </div>
+              <div>
+                <BigHexagram name={data.changedHex.name} title={data.changedHex.name} subtitle="变卦 -- 最终/趋势" />
+                <div className="p-6 border-t border-[#414868]/50">
+                  <p className="text-sm text-[#8a98c9] leading-relaxed">{data.changedHex.meaning}</p>
+                </div>
               </div>
             </div>
           </motion.article>
 
-          {/* Oracle & Lines Analysis */}
+          {/* Step 02: Body and Use */}
           <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#bb9af7]/40 transition-colors duration-500">
-            <div className="bg-[#24283b] border-b border-[#414868] px-3 py-2 flex items-center justify-between">
-              <span className="text-xs font-medium text-[#c0caf5] tracking-widest flex items-center gap-2">
-                <BookOpen className="w-4 h-4 group-hover:text-[#bb9af7] transition-colors" />
-                爻辞卜辞解析
-              </span>
-              <span className="text-[10px] text-[#565f89] italic">圣人遗言，指引当下之吉凶悔吝</span>
+            <SectionLabel step="02" title="分辨体用" tone="border-[#bb9af7] text-[#bb9af7]" />
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[data.body, data.use].map((role) => (
+                <div key={role.role} className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#bb9af7]/40">
+                  <div className="text-xs text-[#565f89] tracking-widest mb-2">{role.role}卦</div>
+                  <div className="flex items-end justify-between gap-3">
+                    <h3 className="text-2xl font-bold text-[#c0caf5]">{role.name}</h3>
+                    <span className="text-sm text-[#e0af68]">五行属{role.element}</span>
+                  </div>
+                  <p className="text-xs text-[#7aa2f7] mt-2">{positionLabel(role.position)} · {role.description}</p>
+                </div>
+              ))}
             </div>
-            
-            <div className="p-6 flex flex-col gap-6">
-              {/* Oracle Text */}
-              <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <h3 className="text-base font-bold text-[#bb9af7] mb-2 tracking-widest">【卜辞】</h3>
-                <p className="text-sm text-[#c0caf5] leading-relaxed border-l-2 border-[#bb9af7] pl-4 bg-[#bb9af7]/5 py-3">
-                  {data.judgment}
-                </p>
-              </motion.div>
-
-              {/* Line Text Summary */}
-              <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <h3 className="text-base font-bold text-[#e0af68] mb-2 tracking-widest">【动爻】</h3>
-                <p className="text-sm text-[#c0caf5] leading-relaxed border-l-2 border-[#e0af68] pl-4 bg-[#e0af68]/5 py-3">
-                  {data.movingLines}
-                </p>
-              </motion.div>
+            <div className="px-6 pb-6">
+              <p className="text-sm text-[#8a98c9] leading-relaxed border-l-2 border-[#bb9af7] pl-4 bg-[#bb9af7]/5 py-3">
+                {data.bodyUseAnalysis}
+              </p>
             </div>
           </motion.article>
 
-          {/* Mutual Hexagram Analysis */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#e0af68]/40 transition-colors duration-500">
-            <div className="bg-[#24283b] border-b border-[#414868] px-3 py-2 flex items-center justify-between">
-              <span className="text-xs font-medium text-[#c0caf5] tracking-widest flex items-center gap-2">
-                <Waypoints className="w-4 h-4 group-hover:text-[#e0af68] transition-colors" />
-                互卦 -- 中间之应
-              </span>
-              <span className="text-[10px] text-[#565f89] italic">事中之变，揭示事物发展的内在交互</span>
-            </div>
-            <div className="p-0 sm:p-6 flex flex-col sm:flex-row gap-0 sm:gap-6 items-stretch">
-              <div className="w-full sm:w-[260px] shrink-0 border-b border-[#414868]/50 sm:border-b-0">
-                <BigHexagram name={data.mutualHex.name} title={data.mutualHex.name} subtitle="过程之象" />
-              </div>
-              <div className="flex-1 p-6 sm:p-0 flex flex-col justify-center">
-                <h3 className="text-lg font-bold text-[#e0af68] mb-4">{data.mutualHex.name}</h3>
-                <p className="text-sm text-[#8a98c9] leading-relaxed">
-                  {data.mutualHex.meaning}
-                </p>
-              </div>
-            </div>
-          </motion.article>
-
-          {/* Changed Hexagram Analysis */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#f7768e]/40 transition-colors duration-500">
-            <div className="bg-[#24283b] border-b border-[#414868] px-3 py-2 flex items-center justify-between">
-              <span className="text-xs font-medium text-[#c0caf5] tracking-widest flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 group-hover:text-[#f7768e] transition-colors" />
-                变卦 -- 事之终应
-              </span>
-              <span className="text-[10px] text-[#565f89] italic">最终趋向，预示事态发展的最终归宿</span>
-            </div>
-            <div className="p-0 sm:p-6 flex flex-col sm:flex-row gap-0 sm:gap-6 items-stretch">
-              <div className="w-full sm:w-[260px] shrink-0 border-b border-[#414868]/50 sm:border-b-0">
-                <BigHexagram name={data.changedHex.name} title={data.changedHex.name} subtitle="趋势之象" />
-              </div>
-              <div className="flex-1 p-6 sm:p-0 flex flex-col justify-center">
-                <h3 className="text-lg font-bold text-[#f7768e] mb-4">{data.changedHex.name}</h3>
-                <p className="text-sm text-[#8a98c9] leading-relaxed">
-                  {data.changedHex.meaning}
-                </p>
-              </div>
-            </div>
-          </motion.article>
-
-          {/* Macro Analysis */}
+          {/* Step 03: Five Element Relation */}
           <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#73daca]/40 transition-colors duration-500">
-            <div className="bg-[#24283b] border-b border-[#414868] px-3 py-2 flex items-center">
-              <span className="text-xs font-medium text-[#c0caf5] tracking-widest flex items-center gap-2">
-                <Activity className="w-4 h-4 group-hover:text-[#73daca] transition-colors" />
-                总体解析与核心建议
-              </span>
+            <SectionLabel step="03" title="五行生克论吉凶" tone="border-[#73daca] text-[#73daca]" />
+            <div className="p-6 flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#73daca]/40">
+                  <div className="text-xs text-[#565f89] tracking-widest">关系</div>
+                  <div className="text-xl font-bold text-[#73daca] mt-2">{data.relation.relation}</div>
+                </div>
+                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#e0af68]/40">
+                  <div className="text-xs text-[#565f89] tracking-widest">核心吉凶</div>
+                  <div className="text-xl font-bold text-[#e0af68] mt-2">{data.relation.status}</div>
+                </div>
+                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#7aa2f7]/40">
+                  <div className="text-xs text-[#565f89] tracking-widest">体用五行</div>
+                  <div className="text-xl font-bold text-[#c0caf5] mt-2">体{data.body.element} / 用{data.use.element}</div>
+                </div>
+              </div>
+              <p className="text-sm text-[#8a98c9] leading-relaxed">
+                {data.fiveElementAnalysis || data.relation.summary}
+              </p>
             </div>
+          </motion.article>
+
+          {/* Step 04: Season and Omen */}
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#e0af68]/40 transition-colors duration-500">
+            <SectionLabel step="04" title="时令与外应" tone="border-[#e0af68] text-[#e0af68]" />
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#e0af68]/40">
+                <div className="text-xs text-[#565f89] tracking-widest mb-2">旺相休囚</div>
+                <h3 className="text-xl font-bold text-[#e0af68]">{data.seasonal.season} · 体气{data.seasonal.strength}</h3>
+                <p className="text-sm text-[#8a98c9] leading-relaxed mt-3">
+                  {data.seasonalAnalysis || data.seasonal.summary}
+                </p>
+              </div>
+              <div className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#c0caf5]/40">
+                <div className="text-xs text-[#565f89] tracking-widest mb-2">外应</div>
+                <h3 className="text-xl font-bold text-[#c0caf5]">未取外应</h3>
+                <p className="text-sm text-[#8a98c9] leading-relaxed mt-3">
+                  {data.omenAnalysis || data.omen.summary}
+                </p>
+              </div>
+            </div>
+          </motion.article>
+
+          {/* Step 05: Macro Analysis */}
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#73daca]/40 transition-colors duration-500">
+            <SectionLabel step="05" title="综合断语与核心建议" tone="border-[#f7768e] text-[#f7768e]" />
             <div className="p-6 flex flex-col gap-4">
               <p className="text-sm text-[#8a98c9] leading-relaxed">
                 {data.meaning}
