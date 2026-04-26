@@ -12,8 +12,10 @@ CHANGE_TELL 是一个基于现代人工智能技术的周易起卦与推演应�
 
 ### 核心功能
 *   **时间起卦 (梅花易数)**：根据用户求问的精确时间（年、月、日、时）自动推导卦象。
-*   **三卦联动**：自动推导**主卦**（现状）、**互卦**（中间过程）与**变卦**（未来趋势）。
-*   **AI 深度解析**：利用 Gemini 3.1 Flash Lite 提供结构化的解卦报告，包含卜辞、含义、核心建议及总体运势。
+*   **三卦流程推演**：自动推导本卦、互卦、变卦，分别对应当前状态、中间过程与最终趋势。
+*   **体用生克判断**：按动爻定位体卦与用卦，并以五行生克输出核心吉凶。
+*   **时令辅助分析**：结合农历月份判断体卦旺相休囚，作为辅助因素修正判断语气。
+*   **AI 结构化解读**：Gemini 只负责文化化表达与建议，核心卦象、体用、生克、吉凶由本地规则确定。
 *   **标准卦象展示**：内置六十四卦标准库，确保视觉展示的爻条与传统易理完全一致。
 *   **极客风 UI**：采用暗色调、现代化的动效设计，营造神秘且专业的仪式感。
 
@@ -51,4 +53,11 @@ The project is optimized for deployment on **Vercel**.
 1. Clone the repository.
 2. Set up `GOOGLE_GENERATIVE_AI_API_KEY` in your environment variables.
 3. Push to Vercel.
-\n<!-- Deployment Fix -->
+
+## Vercel 部署
+
+部署到 Vercel 时，需要在 Project Settings → Environment Variables 中配置：
+
+* `GOOGLE_GENERATIVE_AI_API_KEY`：服务端 `/api/chat` 调用 Gemini 使用。
+
+本地 `npm run build` 不需要该变量；线上请求 `/api/chat` 时必须存在。
