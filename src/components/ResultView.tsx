@@ -61,8 +61,8 @@ interface TrigramRole {
   name: string;
   position: 'upper' | 'lower';
   element: string;
-  role: '体' | '用';
-  description: string;
+  role?: '体' | '用';
+  description?: string;
 }
 
 interface RelationAnalysis {
@@ -73,7 +73,8 @@ interface RelationAnalysis {
 
 interface SeasonalAnalysis {
   bodyElement: string;
-  season: string;
+  season?: string;
+  seasonName?: string;
   strength: string;
   summary: string;
 }
@@ -118,130 +119,146 @@ const SectionLabel = ({ step, title, tone }: { step: string; title: string; tone
 export default function ResultView({ data, onRestart }: { data: DivinationResult, onRestart: () => void }) {
   if (!data) return null;
 
+  const roleCards = [
+    {
+      key: 'body',
+      role: data.body,
+      label: '体卦',
+      description: '动爻不在之经卦，代表我方、求测者、主方。'
+    },
+    {
+      key: 'use',
+      role: data.use,
+      label: '用卦',
+      description: '动爻所在之经卦，代表事情、对方、客方。'
+    }
+  ];
+  const seasonLabel = data.seasonal.season ?? data.seasonal.seasonName ?? '时令';
+
   return (
     <motion.div 
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-6 min-w-0"
     >
       {/* Status Bar */}
-      <motion.section variants={itemVariants} className="border border-[#414868] bg-[#24283b]/50 p-3 flex flex-col gap-1 relative overflow-hidden group hover:bg-[#24283b]/80 transition-colors">
+      <motion.section variants={itemVariants} className="border border-[#414868] bg-[#24283b]/50 p-3 flex flex-col gap-1 relative overflow-hidden group hover:bg-[#24283b]/80 transition-colors min-w-0">
         <div className="absolute top-0 left-0 w-1 h-full bg-[#73daca]"></div>
-        <div className="text-xs font-medium text-[#7aa2f7] flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>天机已现，感应成功</span>
+        <div className="text-xs font-medium text-[#7aa2f7] flex items-center gap-2 min-w-0">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span className="min-w-0 break-words">天机已现，感应成功</span>
         </div>
-        <div className="text-xs font-medium text-[#c0caf5] flex items-center gap-2 opacity-80 mt-1">
-          <span className="w-4 text-center">·</span>
-          <span>时间起卦：{data.timeAnalysis}</span>
+        <div className="text-xs font-medium text-[#c0caf5] flex items-start gap-2 opacity-80 mt-1 min-w-0">
+          <span className="w-4 text-center shrink-0">·</span>
+          <span className="min-w-0 break-words">时间起卦：{data.timeAnalysis}</span>
         </div>
         {data.formula && (
-          <div className="text-xs font-medium text-[#565f89] flex items-center gap-2 opacity-80">
-            <span className="w-4 text-center">·</span>
-            <span>推演公式：{data.formula}</span>
+          <div className="text-xs font-medium text-[#565f89] flex items-start gap-2 opacity-80 min-w-0">
+            <span className="w-4 text-center shrink-0">·</span>
+            <span className="min-w-0 break-words">推演公式：{data.formula}</span>
           </div>
         )}
         {data.movingLine && (
-          <div className="text-xs font-medium text-[#e0af68] flex items-center gap-2 opacity-90">
-            <span className="w-4 text-center">·</span>
-            <span>动爻：第{data.movingLine}爻</span>
+          <div className="text-xs font-medium text-[#e0af68] flex items-start gap-2 opacity-90 min-w-0">
+            <span className="w-4 text-center shrink-0">·</span>
+            <span className="min-w-0 break-words">动爻：第{data.movingLine}爻</span>
           </div>
         )}
       </motion.section>
 
       {/* Data Layout */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 min-w-0">
         
         {/* Analyses */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 min-w-0">
           
           {/* Step 01: Three Hexagrams */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#7aa2f7]/40 transition-colors duration-500">
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#7aa2f7]/40 transition-colors duration-500 min-w-0">
             <SectionLabel step="01" title="排出三卦" tone="border-[#7aa2f7] text-[#7aa2f7]" />
-            <div className="grid grid-cols-1 xl:grid-cols-3">
-              <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50">
+            <div className="grid grid-cols-1 xl:grid-cols-3 min-w-0">
+              <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50 min-w-0">
                 <BigHexagram name={data.mainHex.name} title={data.mainHex.name} subtitle="主卦 -- 开始/当前" />
-                <div className="p-6 border-t border-[#414868]/50">
-                  <p className="text-sm text-[#8a98c9] leading-relaxed">{data.mainHex.meaning}</p>
+                <div className="p-6 border-t border-[#414868]/50 min-w-0">
+                  <p className="text-sm text-[#8a98c9] leading-relaxed break-words">{data.mainHex.meaning}</p>
                 </div>
               </div>
-              <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50">
+              <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50 min-w-0">
                 <BigHexagram name={data.mutualHex.name} title={data.mutualHex.name} subtitle="互卦 -- 中间/隐情" />
-                <div className="p-6 border-t border-[#414868]/50">
-                  <p className="text-sm text-[#8a98c9] leading-relaxed">{data.mutualHex.meaning}</p>
+                <div className="p-6 border-t border-[#414868]/50 min-w-0">
+                  <p className="text-sm text-[#8a98c9] leading-relaxed break-words">{data.mutualHex.meaning}</p>
                 </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <BigHexagram name={data.changedHex.name} title={data.changedHex.name} subtitle="变卦 -- 最终/趋势" />
-                <div className="p-6 border-t border-[#414868]/50">
-                  <p className="text-sm text-[#8a98c9] leading-relaxed">{data.changedHex.meaning}</p>
+                <div className="p-6 border-t border-[#414868]/50 min-w-0">
+                  <p className="text-sm text-[#8a98c9] leading-relaxed break-words">{data.changedHex.meaning}</p>
                 </div>
               </div>
             </div>
           </motion.article>
 
           {/* Step 02: Body and Use */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#bb9af7]/40 transition-colors duration-500">
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#bb9af7]/40 transition-colors duration-500 min-w-0">
             <SectionLabel step="02" title="分辨体用" tone="border-[#bb9af7] text-[#bb9af7]" />
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[data.body, data.use].map((role) => (
-                <div key={role.role} className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#bb9af7]/40">
-                  <div className="text-xs text-[#565f89] tracking-widest mb-2">{role.role}卦</div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
+              {roleCards.map(({ key, role, label, description }) => (
+                <div key={key} className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#bb9af7]/40 min-w-0">
+                  <div className="text-xs text-[#565f89] tracking-widest mb-2">{label}</div>
                   <div className="flex items-end justify-between gap-3">
-                    <h3 className="text-2xl font-bold text-[#c0caf5]">{role.name}</h3>
-                    <span className="text-sm text-[#e0af68]">五行属{role.element}</span>
+                    <h3 className="text-2xl font-bold text-[#c0caf5] break-words min-w-0">{role.name}</h3>
+                    <span className="text-sm text-[#e0af68] shrink-0">五行属{role.element}</span>
                   </div>
-                  <p className="text-xs text-[#7aa2f7] mt-2">{positionLabel(role.position)} · {role.description}</p>
+                  <p className="text-xs text-[#7aa2f7] mt-2 break-words">{positionLabel(role.position)} · {description}</p>
                 </div>
               ))}
             </div>
-            <div className="px-6 pb-6">
-              <p className="text-sm text-[#8a98c9] leading-relaxed border-l-2 border-[#bb9af7] pl-4 bg-[#bb9af7]/5 py-3">
+            <div className="px-6 pb-6 min-w-0">
+              <p className="text-sm text-[#8a98c9] leading-relaxed border-l-2 border-[#bb9af7] pl-4 bg-[#bb9af7]/5 py-3 break-words">
                 {data.bodyUseAnalysis}
               </p>
             </div>
           </motion.article>
 
           {/* Step 03: Five Element Relation */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#73daca]/40 transition-colors duration-500">
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#73daca]/40 transition-colors duration-500 min-w-0">
             <SectionLabel step="03" title="五行生克论吉凶" tone="border-[#73daca] text-[#73daca]" />
-            <div className="p-6 flex flex-col gap-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#73daca]/40">
+            <div className="p-6 flex flex-col gap-4 min-w-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 min-w-0">
+                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#73daca]/40 min-w-0">
                   <div className="text-xs text-[#565f89] tracking-widest">关系</div>
-                  <div className="text-xl font-bold text-[#73daca] mt-2">{data.relation.relation}</div>
+                  <div className="text-xl font-bold text-[#73daca] mt-2 break-words">{data.relation.relation}</div>
                 </div>
-                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#e0af68]/40">
+                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#e0af68]/40 min-w-0">
                   <div className="text-xs text-[#565f89] tracking-widest">核心吉凶</div>
-                  <div className="text-xl font-bold text-[#e0af68] mt-2">{data.relation.status}</div>
+                  <div className="text-xl font-bold text-[#e0af68] mt-2 break-words">{data.relation.status}</div>
                 </div>
-                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#7aa2f7]/40">
+                <div className="border border-[#414868]/70 bg-[#0c0e13] p-4 transition-colors hover:border-[#7aa2f7]/40 min-w-0">
                   <div className="text-xs text-[#565f89] tracking-widest">体用五行</div>
-                  <div className="text-xl font-bold text-[#c0caf5] mt-2">体{data.body.element} / 用{data.use.element}</div>
+                  <div className="text-xl font-bold text-[#c0caf5] mt-2 break-words">体{data.body.element} / 用{data.use.element}</div>
                 </div>
               </div>
-              <p className="text-sm text-[#8a98c9] leading-relaxed">
+              <p className="text-sm text-[#8a98c9] leading-relaxed break-words">
                 {data.fiveElementAnalysis || data.relation.summary}
               </p>
             </div>
           </motion.article>
 
           {/* Step 04: Season and Omen */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#e0af68]/40 transition-colors duration-500">
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#e0af68]/40 transition-colors duration-500 min-w-0">
             <SectionLabel step="04" title="时令与外应" tone="border-[#e0af68] text-[#e0af68]" />
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#e0af68]/40">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
+              <div className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#e0af68]/40 min-w-0">
                 <div className="text-xs text-[#565f89] tracking-widest mb-2">旺相休囚</div>
-                <h3 className="text-xl font-bold text-[#e0af68]">{data.seasonal.season} · 体气{data.seasonal.strength}</h3>
-                <p className="text-sm text-[#8a98c9] leading-relaxed mt-3">
+                <h3 className="text-xl font-bold text-[#e0af68] break-words">{seasonLabel} · 体气{data.seasonal.strength}</h3>
+                <p className="text-sm text-[#8a98c9] leading-relaxed mt-3 break-words">
                   {data.seasonalAnalysis || data.seasonal.summary}
                 </p>
               </div>
-              <div className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#c0caf5]/40">
+              <div className="border border-[#414868]/70 bg-[#0c0e13] p-5 transition-colors hover:border-[#c0caf5]/40 min-w-0">
                 <div className="text-xs text-[#565f89] tracking-widest mb-2">外应</div>
-                <h3 className="text-xl font-bold text-[#c0caf5]">未取外应</h3>
-                <p className="text-sm text-[#8a98c9] leading-relaxed mt-3">
+                <h3 className="text-xl font-bold text-[#c0caf5] break-words">未取外应</h3>
+                <p className="text-sm text-[#8a98c9] leading-relaxed mt-3 break-words">
                   {data.omenAnalysis || data.omen.summary}
                 </p>
               </div>
@@ -249,23 +266,23 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
           </motion.article>
 
           {/* Step 05: Macro Analysis */}
-          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#73daca]/40 transition-colors duration-500">
+          <motion.article variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col group hover:border-[#73daca]/40 transition-colors duration-500 min-w-0">
             <SectionLabel step="05" title="综合断语与核心建议" tone="border-[#f7768e] text-[#f7768e]" />
-            <div className="p-6 flex flex-col gap-4">
-              <p className="text-sm text-[#8a98c9] leading-relaxed">
+            <div className="p-6 flex flex-col gap-4 min-w-0">
+              <p className="text-sm text-[#8a98c9] leading-relaxed break-words">
                 {data.meaning}
               </p>
-              <div className="bg-[#7aa2f7]/5 border-l-4 border-[#7aa2f7] p-4">
+              <div className="bg-[#7aa2f7]/5 border-l-4 border-[#7aa2f7] p-4 min-w-0">
                 <h4 className="text-[#7aa2f7] font-bold mb-2 tracking-wider">【核心建议】</h4>
-                <p className="text-[#c0caf5] leading-relaxed">{data.advice}</p>
+                <p className="text-[#c0caf5] leading-relaxed break-words">{data.advice}</p>
               </div>
-              <div className="flex gap-3 text-xs font-medium mt-2">
-                <span className="border border-[#73daca] text-[#73daca] px-3 py-1.5 bg-[#73daca]/10 flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
+              <div className="flex flex-wrap gap-3 text-xs font-medium mt-2 min-w-0">
+                <span className="border border-[#73daca] text-[#73daca] px-3 py-1.5 bg-[#73daca]/10 flex flex-wrap items-center gap-2 min-w-0 break-words">
+                  <span className="relative flex h-2 w-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#73daca] opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#73daca]"></span>
                   </span>
-                  总体状态: {data.overallStatus}
+                  <span className="min-w-0 break-words">总体状态: {data.overallStatus}</span>
                 </span>
               </div>
             </div>
