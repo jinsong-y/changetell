@@ -8,7 +8,7 @@
 ## 中文说明
 
 ### 项目简介
-CHANGE_TELL 是一个基于现代人工智能技术的周易起卦与推演应用。它结合了传统的“梅花易数”时间起卦法与 Google 最新的 **Gemini 3.1 Flash Lite** 大语言模型，为用户提供深度的卦象解析与生活建议。
+CHANGE_TELL 是一个基于现代人工智能技术的周易起卦与推演应用。它结合了传统的“梅花易数”时间起卦法与 Gemini API，为用户提供深度的卦象解析与生活建议。
 
 ### 核心功能
 *   **时间起卦 (梅花易数)**：根据用户求问的精确时间（年、月、日、时）自动推导卦象。
@@ -22,7 +22,7 @@ CHANGE_TELL 是一个基于现代人工智能技术的周易起卦与推演应�
 ### 技术栈
 *   **前端**: React, TypeScript, Tailwind CSS, Motion (framer-motion)
 *   **后端**: Vercel Serverless Functions (Node.js)
-*   **AI**: Google Generative AI (Gemini 3.1 Flash Lite)
+*   **AI**: Gemini API（模型由 `api/chat.ts` 配置）
 
 ---
 
@@ -30,19 +30,21 @@ CHANGE_TELL 是一个基于现代人工智能技术的周易起卦与推演应�
 ## English Description
 
 ### Project Introduction
-CHANGE_TELL is an I Ching (Book of Changes) divination and interpretation application powered by modern AI. It combines the traditional "Mei Hua Yi Shu" (Plum Blossom Divination) time-based method with Google's latest **Gemini 3.1 Flash Lite** model to provide profound hexagram analysis and life guidance.
+CHANGE_TELL is an I Ching (Book of Changes) divination and interpretation application powered by modern AI. It combines the traditional "Mei Hua Yi Shu" (Plum Blossom Divination) time-based method with the Gemini API to provide hexagram analysis and life guidance.
 
 ### Core Features
 *   **Time-based Divination**: Automatically derives hexagrams based on the precise time (Year, Month, Day, Hour) of the inquiry.
-*   **Trio-Hexagram Logic**: Automatically calculates the **Main Hexagram** (Current state), **Mutual Hexagram** (Process), and **Changed Hexagram** (Future trend).
-*   **AI Deep Interpretation**: Leverages Gemini 3.1 Flash Lite to deliver structured reports including judgments, meanings, core advice, and overall fortune.
+*   **Three-Stage Hexagram Flow**: Deterministic local rules calculate the **Original Hexagram** (current state), **Mutual Hexagram** (middle process), and **Changed Hexagram** (final trend).
+*   **Body/Use Five-Element Judgment**: Local rules locate the body and use trigrams from the moving line, evaluate the five-element relation, and compute the core auspiciousness.
+*   **Seasonal Context Adjustment**: Local rules use the lunar month to assess whether the body trigram is prosperous, supported, resting, imprisoned, or exhausted, then adjust the judgment tone.
+*   **AI Structured Interpretation**: Gemini provides structured cultural expression and practical advice only; core hexagrams, body/use logic, five-element relation, and `overallStatus` are determined locally.
 *   **Standardized Visualization**: Built-in library of the 64 hexagrams ensures that the visual representation of lines (Yao) is perfectly consistent with traditional principles.
 *   **Geek Aesthetic UI**: Features a dark-themed, modern motion design to create a mysterious and professional atmosphere.
 
 ### Tech Stack
 *   **Frontend**: React, TypeScript, Tailwind CSS, Motion (framer-motion)
 *   **Backend**: Vercel Serverless Functions (Node.js)
-*   **AI**: Google Generative AI (Gemini 3.1 Flash Lite)
+*   **AI**: Gemini API (model configured in `api/chat.ts`)
 
 ---
 
