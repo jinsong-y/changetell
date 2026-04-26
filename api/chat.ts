@@ -29,6 +29,12 @@ function withDeterministicSummaries(divinationData: ReturnType<typeof castMeihua
   };
 }
 
+const asText = (value: unknown, fallback: string) =>
+  typeof value === 'string' && value.trim() ? value : fallback;
+
+const asObject = (value: unknown) =>
+  value && typeof value === 'object' ? value as Record<string, unknown> : {};
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -108,8 +114,47 @@ export default async function handler(req: any, res: any) {
     const text = response.text();
 
     const aiPayload = JSON.parse(text);
+    const aiMainHex = asObject(aiPayload.mainHex);
+    const aiMutualHex = asObject(aiPayload.mutualHex);
+    const aiChangedHex = asObject(aiPayload.changedHex);
+
     return res.status(200).json({
-      ...aiPayload,
+      timeAnalysis: asText(
+        aiPayload.timeAnalysis,
+        `起卦时间为${timeInfo}，按公式${formula}排出本卦${mainHexName}、互卦${mutualHexName}、变卦${changedHexName}，动爻为第${movingLine}爻。`,
+      ),
+      mainHex: {
+        name: mainHexName,
+        meaning: asText(aiMainHex.meaning, `${mainHexName}代表开始/当前状态。`),
+      },
+      mutualHex: {
+        name: mutualHexName,
+        meaning: asText(aiMutualHex.meaning, `${mutualHexName}代表中间过程/隐情。`),
+      },
+      changedHex: {
+        name: changedHexName,
+        meaning: asText(aiChangedHex.meaning, `${changedHexName}代表最终结果/趋势。`),
+      },
+      bodyUseAnalysis: asText(
+        aiPayload.bodyUseAnalysis,
+        `体卦为${body.name}，位在${body.position === 'upper' ? '上卦' : '下卦'}，五行属${body.element}；用卦为${use.name}，位在${use.position === 'upper' ? '上卦' : '下卦'}，五行属${use.element}。`,
+      ),
+      fiveElementAnalysis: asText(
+        aiPayload.fiveElementAnalysis,
+        `${body.element}与${use.element}形成${relation.relation}，核心吉凶为${relation.status}。${relation.summary}`,
+      ),
+      seasonalAnalysis: asText(aiPayload.seasonalAnalysis, seasonal.summary),
+      omenAnalysis: asText(aiPayload.omenAnalysis, omen.summary),
+      meaning: asText(
+        aiPayload.meaning,
+        `本断以体用五行生克为主，${relation.summary}本卦看当前，互卦看过程，变卦看趋势。`,
+      ),
+      advice: asText(
+        aiPayload.advice,
+        relation.status === '大凶' || relation.status === '不利'
+          ? '宜先退守审势，减少消耗，待条件转顺后再推进。'
+          : '可顺势推进，但仍需守正稳行，以时令外应为辅，不可轻躁。',
+      ),
       formula,
       movingLine,
       body,
