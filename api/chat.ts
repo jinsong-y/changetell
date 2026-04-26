@@ -1,27 +1,33 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Solar, Lunar } from 'lunar-typescript';
+import { castMeihua } from "../src/utils/meihua";
 
-// 八卦对应表 (梅花易数标准: 1乾, 2兑, 3离, 4震, 5巽, 6坎, 7艮, 8坤)
-const TRIGRAM_MAP: Record<number, string> = {
-  1: '天', 2: '泽', 3: '火', 4: '雷', 5: '风', 6: '水', 7: '山', 0: '地', 8: '地'
+const RELATION_SUMMARY: Record<string, string> = {
+  比和: '体用同气，主客同频，事情较易相合。',
+  用生体: '事情助我，外部条件生扶主方，最为有利。',
+  体克用: '我能制事，虽需费力推动，仍有可成之象。',
+  体生用: '我去生事，主方耗泄，易有投入多、回收慢之象。',
+  用克体: '事情克我，阻力压身，宜谨慎退守或先化解冲突。',
 };
 
-// 八卦二进制 (从下往上: 阳1阴0)
-const TRIGRAM_BINARY: Record<string, string> = {
-  '天': '111', '泽': '011', '火': '101', '雷': '001',
-  '风': '110', '水': '010', '山': '100', '地': '000'
-};
+function withDeterministicSummaries(divinationData: ReturnType<typeof castMeihua>) {
+  const relation = {
+    ...divinationData.relation,
+    summary: RELATION_SUMMARY[divinationData.relation.relation],
+  };
+  const seasonal = {
+    ...divinationData.seasonal,
+    summary: `体卦属${divinationData.seasonal.bodyElement}，时令为${divinationData.seasonal.seasonName}，体气为${divinationData.seasonal.strength}。时令只作辅助，不覆盖体用生克主断。`,
+  };
 
-const HEXAGRAMS_TABLE: any = {
-  '天': { '天': '乾为天', '泽': '天泽履', '火': '天火同人', '雷': '天雷无妄', '风': '天风姤', '水': '天水讼', '山': '天山遁', '地': '天地否' },
-  '泽': { '天': '泽天夬', '泽': '兑为泽', '火': '泽火革', '雷': '泽雷随', '风': '泽风大过', '水': '泽水困', '山': '泽山咸', '地': '泽地萃' },
-  '火': { '天': '火天大有', '泽': '火泽睽', '火': '离为火', '雷': '火雷噬嗑', '风': '火风鼎', '水': '火水未济', '山': '火山旅', '地': '火地晋' },
-  '雷': { '天': '雷天大壮', '泽': '雷泽归妹', '火': '雷火丰', '雷': '震为雷', '风': '雷风恒', '水': '雷水解', '山': '雷山小过', '地': '雷地豫' },
-  '风': { '天': '风天小畜', '泽': '风泽中孚', '火': '风火家人', '雷': '风雷益', '风': '巽为风', '水': '风水涣', '山': '风山渐', '地': '风地观' },
-  '水': { '天': '水天需', '泽': '水泽节', '火': '水火既济', '雷': '水雷屯', '风': '水风井', '水': '坎为水', '山': '水山蹇', '地': '水地比' },
-  '山': { '天': '山天大畜', '泽': '山泽损', '火': '山火贲', '雷': '山雷颐', '风': '山风蛊', '水': '山水蒙', '山': '艮为山', '地': '山地剥' },
-  '地': { '天': '地天泰', '泽': '地泽临', '火': '地火明夷', '雷': '地雷复', '风': '地风升', '水': '地水师', '山': '地山谦', '地': '坤为地' }
-};
+  return {
+    ...divinationData,
+    mainHexName: divinationData.mainHex.name,
+    mutualHexName: divinationData.mutualHex.name,
+    changedHexName: divinationData.changedHex.name,
+    relation,
+    seasonal,
+  };
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -36,93 +42,83 @@ export default async function handler(req: any, res: any) {
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
   try {
-    // 1. 本地计算梅花易数
-    const date = timestamp ? new Date(timestamp) : new Date();
-    const solar = Solar.fromDate(date);
-    const lunar = solar.getLunar();
-
-    const yearZhiIndex = lunar.getYearZhiIndex() + 1; // 子1, 丑2... 午7...
-    const month = lunar.getMonth();
-    const day = lunar.getDay();
-    const hourZhiIndex = lunar.getTimeZhiIndex() + 1;
-
-    // 梅花易数公式
-    const upperIndex = (yearZhiIndex + month + day) % 8;
-    const lowerIndex = (yearZhiIndex + month + day + hourZhiIndex) % 8;
-    let movingLine = (yearZhiIndex + month + day + hourZhiIndex) % 6;
-    if (movingLine === 0) movingLine = 6;
-
-    const upperName = TRIGRAM_MAP[upperIndex === 0 ? 8 : upperIndex];
-    const lowerName = TRIGRAM_MAP[lowerIndex === 0 ? 8 : lowerIndex];
-    const mainHexName = HEXAGRAMS_TABLE[upperName][lowerName];
-
-    // 计算互卦 (取主卦的 234 爻为下，345 爻为上)
-    const mainBinary = TRIGRAM_BINARY[lowerName] + TRIGRAM_BINARY[upperName]; // 下+上 = 123 + 456
-    const mutualLowerBinary = mainBinary.substring(1, 4); // 2,3,4爻
-    const mutualUpperBinary = mainBinary.substring(2, 5); // 3,4,5爻
-    
-    const findTrigramByBinary = (bin: string) => Object.keys(TRIGRAM_BINARY).find(key => TRIGRAM_BINARY[key] === bin) || '天';
-    const mutualLowerName = findTrigramByBinary(mutualLowerBinary);
-    const mutualUpperName = findTrigramByBinary(mutualUpperBinary);
-    const mutualHexName = HEXAGRAMS_TABLE[mutualUpperName][mutualLowerName];
-
-    // 计算变卦
-    const changedBinaryArr = mainBinary.split('');
-    const lineToChange = movingLine - 1;
-    changedBinaryArr[lineToChange] = changedBinaryArr[lineToChange] === '1' ? '0' : '1';
-    const changedLowerName = findTrigramByBinary(changedBinaryArr.slice(0, 3).join(''));
-    const changedUpperName = findTrigramByBinary(changedBinaryArr.slice(3, 6).join(''));
-    const changedHexName = HEXAGRAMS_TABLE[changedUpperName][changedLowerName];
-
-    const divinationData = {
-      timeInfo: `${lunar.getYearInGanZhi()}年${lunar.getMonthInChinese()}月${lunar.getDayInChinese()} ${lunar.getTimeZhi()}时`,
-      formula: `上卦:(${yearZhiIndex}+${month}+${day})%8=${upperIndex}; 下卦:(${yearZhiIndex}+${month}+${day}+${hourZhiIndex})%8=${lowerIndex}; 动爻:${movingLine}`,
+    const divinationData = castMeihua(timestamp);
+    const {
+      timeInfo,
+      formula,
       mainHexName,
       mutualHexName,
       changedHexName,
-      movingLine
-    };
+      movingLine,
+      body,
+      use,
+      relation,
+      seasonal,
+      omen,
+    } = withDeterministicSummaries(divinationData);
 
-    // 2. 调用 AI 进行解读
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-flash-lite-preview", 
-      generationConfig: { responseMimeType: "application/json" }
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.1-flash-lite-preview",
+      generationConfig: { responseMimeType: "application/json" },
     });
 
-    const systemPrompt = `你是一位精通易经的顶级解卦大师。
-我已经通过"梅花易数"本地算法计算出了精确的结果，请你基于以下确定的卦象数据进行专业、深度的文化解读。
+    const systemPrompt = `你是一位精通梅花易数的解卦师。
+本地程序已经按梅花易数计算出确定结果。你必须严格依据这些确定数据解释，不得改动卦名、动爻、体用、五行、生克、吉凶，不得编造外应。
 
 确定数据如下：
-- 起卦时间：${divinationData.timeInfo}
-- 主卦：${mainHexName}
-- 互卦：${mutualHexName}
-- 变卦：${changedHexName}
+- 起卦时间：${timeInfo}
+- 起卦公式：${formula}
+- 本卦：${mainHexName}，代表开始/当前状态
+- 互卦：${mutualHexName}，代表中间过程/隐情
+- 变卦：${changedHexName}，代表最终结果/趋势
 - 动爻：第${movingLine}爻
+- 体卦：${body.name}（${body.position === 'upper' ? '上卦' : '下卦'}，五行属${body.element}），代表我、求测者、主方
+- 用卦：${use.name}（${use.position === 'upper' ? '上卦' : '下卦'}，五行属${use.element}），代表事、对方、客方
+- 体用关系：${relation.relation}
+- 核心吉凶：${relation.status}
+- 生克摘要：${relation.summary}
+- 时令：${seasonal.summary}
+- 外应：${omen.summary}
 
-你的任务是：
-1. 解释这些卦象之间的逻辑联系（现状、过程、趋势）。
-2. 结合用户求问之事，给出极具洞察力的建议。
-3. 保持古雅且专业的文风。
+解读要求：
+1. 按“排三卦 -> 定体用 -> 论五行生克 -> 看时令外应 -> 综合建议”的顺序输出。
+2. 核心判断以体用生克为主，不以复杂爻辞为主。
+3. 外应未取，只能说明未取外应，不得杜撰看到、听到、遇到的事物。
+4. 文风古雅但清楚，建议必须能落到用户问题。
+5. overallStatus 必须严格等于 ${relation.status}。
 
 输出JSON结构：
 {
-  "timeAnalysis": "说明如何基于时间推导出上述卦象的逻辑（引用起卦时间）",
-  "mainHex": { "name": "${mainHexName}", "meaning": "主卦的含义解析" },
-  "mutualHex": { "name": "${mutualHexName}", "meaning": "互卦的含义解析" },
-  "changedHex": { "name": "${changedHexName}", "meaning": "变卦的含义解析" },
-  "movingLines": "第${movingLine}爻动的具体含义及变动启示",
-  "judgment": "核心卜辞解析",
-  "meaning": "深度综合解析",
-  "advice": "针对性建议",
-  "overallStatus": "总体状态(如: 大吉/平平等)"
+  "timeAnalysis": "说明起卦时间与公式如何推出三卦和动爻",
+  "mainHex": { "name": "${mainHexName}", "meaning": "本卦如何表示开始/当前" },
+  "mutualHex": { "name": "${mutualHexName}", "meaning": "互卦如何表示中间过程/隐情" },
+  "changedHex": { "name": "${changedHexName}", "meaning": "变卦如何表示最终趋势" },
+  "bodyUseAnalysis": "解释体卦${body.name}与用卦${use.name}的定位",
+  "fiveElementAnalysis": "解释${body.element}与${use.element}形成${relation.relation}，结论必须是${relation.status}",
+  "seasonalAnalysis": "解释${seasonal.summary}",
+  "omenAnalysis": "解释${omen.summary}",
+  "meaning": "围绕用户问题的综合断语",
+  "advice": "可执行建议",
+  "overallStatus": "${relation.status}"
 }`;
 
     const result = await model.generateContent([systemPrompt, `用户求问：${prompt}`]);
     const response = await result.response;
     const text = response.text();
 
-    return res.status(200).json(JSON.parse(text));
+    const aiPayload = JSON.parse(text);
+    return res.status(200).json({
+      ...aiPayload,
+      formula,
+      movingLine,
+      body,
+      use,
+      relation,
+      seasonal,
+      omen,
+      overallStatus: relation.status,
+    });
   } catch (error: any) {
     console.error("Divination/Gemini Error:", error);
     return res.status(500).json({ error: "天机运转受阻，请稍后再试" });
