@@ -18,9 +18,17 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, timestamp }),
       });
-      
-      const data = await response.json();
+
+      const text = await response.text();
+      let data: any;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(response.ok ? '服务返回格式异常，请稍后再试' : text || '服务暂时不可用，请稍后再试');
+      }
+
       if (data.error) throw new Error(data.error);
+      if (!response.ok) throw new Error('服务暂时不可用，请稍后再试');
       
       setResultData(data);
       setView('result');
