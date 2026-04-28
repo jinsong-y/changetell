@@ -46,6 +46,15 @@ export interface CastOptions {
   numbers?: number[];
 }
 
+interface InputViewProps {
+  onCast: (prompt: string, timestamp: string, options?: CastOptions) => void;
+  repeatWarning?: string;
+  onUseNumbers?: () => void;
+  onContinueTime?: () => void;
+  forceNumbersMode?: boolean;
+  initialCastMethod?: CastMethod;
+}
+
 const NUMBER_CAST_MIN = 1;
 const NUMBER_CAST_MAX = 999;
 const REQUIRED_NUMBER_ERROR = '上卦数和下卦数需填写 1 到 999 的整数';
@@ -98,14 +107,27 @@ export const getVisualHexagram = (lines: number[]) => {
   };
 };
 
-export default function InputView({ onCast }: { onCast: (prompt: string, timestamp: string, options?: CastOptions) => void }) {
+export default function InputView({
+  onCast,
+  repeatWarning,
+  onUseNumbers,
+  onContinueTime,
+  forceNumbersMode,
+  initialCastMethod = 'time',
+}: InputViewProps) {
   const [inputVal, setInputVal] = useState('');
-  const [castMethod, setCastMethod] = useState<CastMethod>('time');
+  const [castMethod, setCastMethod] = useState<CastMethod>(initialCastMethod);
   const [numberInputs, setNumberInputs] = useState(['', '', '']);
   const [animKey, setAnimKey] = useState(0);
 
   // 仅保留视觉动画，不作为实际计算依据
   const [visualLines, setVisualLines] = useState<number[]>([7, 8, 7, 8, 7, 8]);
+
+  useEffect(() => {
+    if (forceNumbersMode) {
+      setCastMethod('numbers');
+    }
+  }, [forceNumbersMode]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -168,7 +190,7 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
             transition={{ delay: 0.3, duration: 1 }} 
             className="text-[#73daca] text-base font-medium"
           >
-            凡占卜者，必诚心正意。
+            优先以当前时辰起卦。凡占卜者，必诚心正意。
           </motion.div>
           <motion.div 
             initial={{ opacity: 0 }} 
@@ -187,6 +209,28 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
             “初筮告，再三渎，渎则不告。”<br/>
             同一时辰内，不要反复起卦。
           </motion.div>
+
+            {repeatWarning && (
+              <div className="border border-[#e0af68] bg-[#e0af68]/10 p-3 text-sm text-[#e0af68] flex flex-col gap-3">
+                <p className="leading-relaxed break-words">{repeatWarning}</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={onUseNumbers}
+                    className="border border-[#73daca] bg-[#73daca]/10 px-3 py-2 text-xs font-bold tracking-widest text-[#73daca]"
+                  >
+                    改用报数起卦
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onContinueTime}
+                    className="border border-[#414868] bg-[#1a1b26] px-3 py-2 text-xs font-bold tracking-widest text-[#8a98c9]"
+                  >
+                    仍用时辰起卦
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               {[

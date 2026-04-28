@@ -119,6 +119,19 @@ assert.ok(!resultHtml.includes('undefined'));
 const inputHtml = renderToStaticMarkup(<InputView onCast={() => {}} />);
 assert.ok(inputHtml.includes('输入求问之事'));
 assert.ok(inputHtml.includes('报数起卦'));
+assert.ok(inputHtml.includes('优先以当前时辰起卦'));
+
+const repeatWarningHtml = renderToStaticMarkup(
+  <InputView
+    onCast={() => {}}
+    repeatWarning="同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。"
+    onUseNumbers={() => {}}
+    onContinueTime={() => {}}
+  />,
+);
+assert.ok(repeatWarningHtml.includes('同一时辰内相同问题不宜重复起卦'));
+assert.ok(repeatWarningHtml.includes('改用报数起卦'));
+assert.ok(repeatWarningHtml.includes('仍用时辰起卦'));
 
 const loadingHtml = renderToStaticMarkup(<LoadingView />);
 assert.ok(loadingHtml.includes('正在起卦'));
