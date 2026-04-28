@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { castMeihua } from "./meihua.js";
+import { castByNumbers, castMeihua, type CastMethod } from "./meihua.js";
 
 const RELATION_SUMMARY: Record<string, string> = {
   比和: '体用同气，主客同频，事情较易相合。',
@@ -9,7 +9,9 @@ const RELATION_SUMMARY: Record<string, string> = {
   用克体: '事情克我，阻力压身，宜谨慎退守或先化解冲突。',
 };
 
-function withDeterministicSummaries(divinationData: ReturnType<typeof castMeihua>) {
+type DivinationData = ReturnType<typeof castMeihua>;
+
+function withDeterministicSummaries(divinationData: DivinationData) {
   const relation = {
     ...divinationData.relation,
     summary: RELATION_SUMMARY[divinationData.relation.relation],
@@ -29,6 +31,41 @@ function withDeterministicSummaries(divinationData: ReturnType<typeof castMeihua
   };
 }
 
+function castByRequest(input: {
+  castMethod?: CastMethod;
+  castPayload?: { numbers?: number[] };
+  timestamp?: string;
+}): DivinationData {
+  if (input.castMethod === 'numbers') {
+    return castByNumbers({
+      numbers: input.castPayload?.numbers ?? [],
+      timestamp: input.timestamp,
+    });
+  }
+
+  return castMeihua(input.timestamp);
+}
+
+export function getCastRequestValidationError(input: {
+  prompt?: unknown;
+  castMethod?: unknown;
+  castPayload?: { numbers?: unknown[] };
+}) {
+  if (!input.prompt) return "Prompt is required";
+
+  if (input.castMethod === 'numbers') {
+    const numbers = input.castPayload?.numbers;
+    const upper = Array.isArray(numbers) ? numbers[0] : undefined;
+    const lower = Array.isArray(numbers) ? numbers[1] : undefined;
+
+    if (!Number.isFinite(Number(upper)) || !Number.isFinite(Number(lower))) {
+      return '报数起卦至少需要填写上卦数和下卦数';
+    }
+  }
+
+  return null;
+}
+
 const asText = (value: unknown, fallback: string) =>
   typeof value === 'string' && value.trim() ? value : fallback;
 
@@ -44,14 +81,17 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { prompt, timestamp } = req.body;
-  if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+  const { prompt, timestamp, castMethod, castPayload } = req.body;
+  const validationError = getCastRequestValidationError({ prompt, castMethod, castPayload });
+  if (validationError) return res.status(400).json({ error: validationError });
 
   try {
-    const divinationData = castMeihua(timestamp);
+    const divinationData = castByRequest({ castMethod, castPayload, timestamp });
     const {
+      castMethodLabel,
       timeInfo,
       formula,
+      stabilityNote,
       mainHexName,
       mutualHexName,
       changedHexName,
@@ -73,7 +113,8 @@ export default async function handler(req: any, res: any) {
 本地程序已经按梅花易数计算出确定结果。你必须严格依据这些确定数据解释，不得改动卦名、动爻、体用、五行、生克、吉凶，不得编造外应。
 
 确定数据如下：
-- 起卦时间：${timeInfo}
+- 起卦方式：${castMethodLabel}
+- 起卦信息：${timeInfo}
 - 起卦公式：${formula}
 - 本卦：${mainHexName}，代表开始/当前状态
 - 互卦：${mutualHexName}，代表中间过程/隐情
@@ -86,6 +127,7 @@ export default async function handler(req: any, res: any) {
 - 生克摘要：${relation.summary}
 - 时令：${seasonal.summary}
 - 外应：${omen.summary}
+${stabilityNote ? `- 起卦提示：${stabilityNote}` : ''}
 
 解读要求：
 1. 按“排三卦 -> 定体用 -> 论五行生克 -> 看时令外应 -> 综合建议”的顺序输出。
@@ -121,7 +163,7 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({
       timeAnalysis: asText(
         aiPayload.timeAnalysis,
-        `起卦时间为${timeInfo}，按公式${formula}排出本卦${mainHexName}、互卦${mutualHexName}、变卦${changedHexName}，动爻为第${movingLine}爻。`,
+        `${castMethodLabel}：${timeInfo}，按公式${formula}排出本卦${mainHexName}、互卦${mutualHexName}、变卦${changedHexName}，动爻为第${movingLine}爻。`,
       ),
       mainHex: {
         name: mainHexName,
@@ -156,6 +198,9 @@ export default async function handler(req: any, res: any) {
           : '可顺势推进，但仍需守正稳行，以时令外应为辅，不可轻躁。',
       ),
       formula,
+      castMethod: divinationData.castMethod,
+      castMethodLabel,
+      stabilityNote,
       movingLine,
       body,
       use,

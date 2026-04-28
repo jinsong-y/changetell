@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "test:meihua": "tsx src/utils/meihua.test.ts && tsx src/utils/ui-contract.test.tsx",
+    "test:meihua": "tsx src/utils/meihua.test.ts && tsx src/utils/ui-contract.test.tsx && tsx src/utils/chat-api.test.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

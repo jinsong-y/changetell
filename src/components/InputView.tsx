@@ -9,6 +9,31 @@ const getTrigramByCode = (code: string): TrigramName => {
 
 export const getCastTimestamp = (date = new Date()) => date.toISOString();
 
+export type CastMethod = 'time' | 'numbers';
+
+export interface CastOptions {
+  method: CastMethod;
+  numbers?: number[];
+}
+
+const parseNumberInput = (value: string) => {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.trunc(parsed) : null;
+};
+
+export const getNumberCastPayload = (inputs: string[]) => {
+  const upper = parseNumberInput(inputs[0] ?? '');
+  const lower = parseNumberInput(inputs[1] ?? '');
+  const moving = parseNumberInput(inputs[2] ?? '');
+  const canCast = upper !== null && lower !== null;
+
+  return {
+    canCast,
+    numbers: canCast ? [upper, lower, ...(moving === null ? [] : [moving])] : [],
+  };
+};
+
 export const getVisualHexagram = (lines: number[]) => {
   const upperCode = lines.slice(0, 3).map(l => l >= 8 ? '0' : '1').join('');
   const lowerCode = lines.slice(3, 6).map(l => l >= 8 ? '0' : '1').join('');
@@ -22,8 +47,10 @@ export const getVisualHexagram = (lines: number[]) => {
   };
 };
 
-export default function InputView({ onCast }: { onCast: (prompt: string, timestamp: string) => void }) {
+export default function InputView({ onCast }: { onCast: (prompt: string, timestamp: string, options?: CastOptions) => void }) {
   const [inputVal, setInputVal] = useState('');
+  const [castMethod, setCastMethod] = useState<CastMethod>('time');
+  const [numberInputs, setNumberInputs] = useState(['', '', '']);
   const [animKey, setAnimKey] = useState(0);
 
   // 仅保留视觉动画，不作为实际计算依据
@@ -38,11 +65,15 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
   }, []);
 
   const { upperTri, lowerTri, name: hexName } = getVisualHexagram(visualLines);
+  const numberCastPayload = getNumberCastPayload(numberInputs);
+  const canCast = Boolean(inputVal.trim()) && (castMethod === 'time' || numberCastPayload.canCast);
 
   const handleCastClick = () => {
-    if (inputVal.trim()) {
-      // 传递本地 ISO 时间字符串，以便后端进行梅花易数推演
-      onCast(inputVal, getCastTimestamp());
+    if (canCast) {
+      onCast(inputVal, getCastTimestamp(), {
+        method: castMethod,
+        numbers: castMethod === 'numbers' ? numberCastPayload.numbers : undefined,
+      });
     }
   };
 
@@ -105,6 +136,48 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
             “初筮告，再三渎，渎则不告。”<br/>
             同一时辰内，不要反复起卦。
           </motion.div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'time', label: '时间起卦' },
+                { key: 'numbers', label: '报数起卦' },
+              ].map((method) => (
+                <button
+                  key={method.key}
+                  type="button"
+                  onClick={() => setCastMethod(method.key as CastMethod)}
+                  className={`border px-3 py-2 text-xs font-bold tracking-widest transition-colors ${
+                    castMethod === method.key
+                      ? 'border-[#73daca] bg-[#73daca]/10 text-[#73daca]'
+                      : 'border-[#414868] bg-[#1a1b26] text-[#8a98c9] hover:border-[#7aa2f7] hover:text-[#7aa2f7]'
+                  }`}
+                >
+                  {method.label}
+                </button>
+              ))}
+            </div>
+
+            {castMethod === 'numbers' && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {['上卦数', '下卦数', '动爻数(可选)'].map((label, index) => (
+                  <label key={label} className="border border-[#414868] bg-[#24283b] p-2 flex flex-col gap-1 focus-within:border-[#bb9af7] transition-colors">
+                    <span className="text-[10px] text-[#565f89] tracking-widest">{label}</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={numberInputs[index]}
+                      onChange={(event) => {
+                        const next = [...numberInputs];
+                        next[index] = event.target.value.replace(/[^\d-]/g, '');
+                        setNumberInputs(next);
+                      }}
+                      className="bg-transparent border-none outline-none text-[#c0caf5] text-sm placeholder-[#565f89] focus:ring-0"
+                      placeholder={index < 2 ? '必填' : '可空'}
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
             
             <motion.div 
               initial={{ opacity: 0, y: 5 }} 
@@ -186,11 +259,11 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
           </AnimatePresence>
 
           <motion.button 
-            whileHover={inputVal.trim() ? { scale: 1.02, backgroundColor: "#73daca", color: "#1a1b26", boxShadow: "0 0 20px rgba(115, 218, 202, 0.4)" } : {}}
-            whileTap={inputVal.trim() ? { scale: 0.98 } : {}}
+            whileHover={canCast ? { scale: 1.02, backgroundColor: "#73daca", color: "#1a1b26", boxShadow: "0 0 20px rgba(115, 218, 202, 0.4)" } : {}}
+            whileTap={canCast ? { scale: 0.98 } : {}}
             transition={{ ease: "easeOut", duration: 0.2 }}
             onClick={handleCastClick}
-            disabled={!inputVal.trim()}
+            disabled={!canCast}
             className="pulse-effect disabled:opacity-50 disabled:[animation:none] disabled:border-[#565f89] disabled:text-[#565f89] disabled:cursor-not-allowed border border-[#73daca] bg-[#1a1b26] text-[#73daca] text-xl font-bold py-4 px-12 tracking-widest uppercase transition-colors duration-300"
           >
             掷爻

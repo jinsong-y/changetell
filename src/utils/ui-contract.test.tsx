@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import InputView, { getCastTimestamp, getVisualHexagram } from '../components/InputView';
+import InputView, { getCastTimestamp, getNumberCastPayload, getVisualHexagram } from '../components/InputView';
 import LoadingView, { LOADING_SEQUENCE } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
 import { castMeihua } from './meihua';
@@ -11,6 +11,10 @@ assert.equal(getCastTimestamp(date), '2026-04-28T08:09:10.000Z');
 
 assert.equal(getVisualHexagram([7, 7, 7, 8, 8, 8]).name, '天地否');
 assert.equal(getVisualHexagram([8, 8, 8, 7, 7, 7]).name, '地天泰');
+
+assert.deepEqual(getNumberCastPayload(['1', '8', '6']), { canCast: true, numbers: [1, 8, 6] });
+assert.deepEqual(getNumberCastPayload(['1', '8', '']), { canCast: true, numbers: [1, 8] });
+assert.equal(getNumberCastPayload(['1', '', '6']).canCast, false);
 
 assert.ok(LOADING_SEQUENCE.includes('定体用生克...'));
 assert.ok(!LOADING_SEQUENCE.some((step) => step.includes('爻辞')));
@@ -51,13 +55,14 @@ const resultHtml = renderToStaticMarkup(
   />,
 );
 
-for (const text of ['01', '排出三卦', '02', '分辨体用', '03', '五行生克论吉凶', '04', '时令与外应', '05', '综合断语与核心建议', '未取外应']) {
+for (const text of ['01', '排出三卦', '02', '分辨体用', '03', '五行生克论吉凶', '04', '时令与外应', '05', '综合断语与核心建议', '未取外应', '同一时辰内相同问题不宜重复起卦']) {
   assert.ok(resultHtml.includes(text), `missing ${text}`);
 }
 assert.ok(!resultHtml.includes('undefined'));
 
 const inputHtml = renderToStaticMarkup(<InputView onCast={() => {}} />);
 assert.ok(inputHtml.includes('输入求问之事'));
+assert.ok(inputHtml.includes('报数起卦'));
 
 const loadingHtml = renderToStaticMarkup(<LoadingView />);
 assert.ok(loadingHtml.includes('正在起卦'));

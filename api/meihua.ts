@@ -6,6 +6,7 @@ export type PositionName = 'upper' | 'lower';
 export type RelationName = '比和' | '用生体' | '体克用' | '体生用' | '用克体';
 export type RelationStatus = '大吉' | '小吉' | '不利' | '大凶';
 export type SeasonalStrength = '旺' | '相' | '囚' | '休';
+export type CastMethod = 'time' | 'numbers';
 
 export interface HexInfo {
   name: string;
@@ -40,8 +41,11 @@ export interface OmenAnalysis {
 }
 
 export interface CastResult {
+  castMethod: CastMethod;
+  castMethodLabel: string;
   timeInfo: string;
   formula: string;
+  stabilityNote?: string;
   mainHex: HexInfo;
   mutualHex: HexInfo;
   changedHex: HexInfo;
@@ -94,6 +98,11 @@ const CONTROLS: Record<ElementName, ElementName> = {
 export function normalizeTrigramIndex(index: number): number {
   const normalized = ((index % 8) + 8) % 8;
   return normalized === 0 ? 8 : normalized;
+}
+
+export function normalizeMovingLine(index: number): number {
+  const normalized = ((index % 6) + 6) % 6;
+  return normalized === 0 ? 6 : normalized;
 }
 
 export function getTrigramElement(name: TrigramName): ElementName {
@@ -182,6 +191,70 @@ export function getSeasonalAnalysis(bodyElement: ElementName, month: number): Se
   };
 }
 
+function buildCastResult(input: {
+  castMethod: CastMethod;
+  castMethodLabel: string;
+  upperName: TrigramName;
+  lowerName: TrigramName;
+  movingLine: number;
+  month: number;
+  timeInfo: string;
+  formula: string;
+  stabilityNote?: string;
+}): CastResult {
+  const mainHex: HexInfo = {
+    name: HEXAGRAMS_TABLE[input.upperName][input.lowerName],
+    upperName: input.upperName,
+    lowerName: input.lowerName,
+  };
+
+  const mainBinary = TRIGRAM_BINARY[input.lowerName] + TRIGRAM_BINARY[input.upperName];
+  const mutualLowerName = findTrigramByBinary(mainBinary.substring(1, 4));
+  const mutualUpperName = findTrigramByBinary(mainBinary.substring(2, 5));
+  const mutualHex: HexInfo = {
+    name: HEXAGRAMS_TABLE[mutualUpperName][mutualLowerName],
+    upperName: mutualUpperName,
+    lowerName: mutualLowerName,
+  };
+
+  const changedBinaryArr = mainBinary.split('');
+  const lineToChange = input.movingLine - 1;
+  changedBinaryArr[lineToChange] = changedBinaryArr[lineToChange] === '1' ? '0' : '1';
+  const changedLowerName = findTrigramByBinary(changedBinaryArr.slice(0, 3).join(''));
+  const changedUpperName = findTrigramByBinary(changedBinaryArr.slice(3, 6).join(''));
+  const changedHex: HexInfo = {
+    name: HEXAGRAMS_TABLE[changedUpperName][changedLowerName],
+    upperName: changedUpperName,
+    lowerName: changedLowerName,
+  };
+
+  const { body, use } = getBodyUseRoles({
+    upperName: input.upperName,
+    lowerName: input.lowerName,
+    movingLine: input.movingLine,
+  });
+
+  return {
+    castMethod: input.castMethod,
+    castMethodLabel: input.castMethodLabel,
+    timeInfo: input.timeInfo,
+    formula: input.formula,
+    stabilityNote: input.stabilityNote,
+    mainHex,
+    mutualHex,
+    changedHex,
+    movingLine: input.movingLine,
+    body,
+    use,
+    relation: analyzeRelation(body.element, use.element),
+    seasonal: getSeasonalAnalysis(body.element, input.month),
+    omen: {
+      used: false,
+      summary: '本次未采外应，不编造声色人事之灵应；以体用五行生克为主。',
+    },
+  };
+}
+
 export function castMeihua(timestamp?: string | number | Date): CastResult {
   const date = timestamp === undefined ? new Date() : new Date(timestamp);
   const solar = Solar.fromDate(date);
@@ -195,52 +268,56 @@ export function castMeihua(timestamp?: string | number | Date): CastResult {
   const upperIndexRaw = (yearZhiIndex + month + day) % 8;
   const lowerIndexRaw = (yearZhiIndex + month + day + hourZhiIndex) % 8;
   const movingLineRaw = (yearZhiIndex + month + day + hourZhiIndex) % 6;
-  const movingLine = movingLineRaw === 0 ? 6 : movingLineRaw;
+  const movingLine = normalizeMovingLine(movingLineRaw);
 
   const upperName = TRIGRAM_MAP[normalizeTrigramIndex(upperIndexRaw)];
   const lowerName = TRIGRAM_MAP[normalizeTrigramIndex(lowerIndexRaw)];
-  const mainHex: HexInfo = {
-    name: HEXAGRAMS_TABLE[upperName][lowerName],
+
+  return buildCastResult({
+    castMethod: 'time',
+    castMethodLabel: '时间起卦',
     upperName,
     lowerName,
-  };
-
-  const mainBinary = TRIGRAM_BINARY[lowerName] + TRIGRAM_BINARY[upperName];
-  const mutualLowerName = findTrigramByBinary(mainBinary.substring(1, 4));
-  const mutualUpperName = findTrigramByBinary(mainBinary.substring(2, 5));
-  const mutualHex: HexInfo = {
-    name: HEXAGRAMS_TABLE[mutualUpperName][mutualLowerName],
-    upperName: mutualUpperName,
-    lowerName: mutualLowerName,
-  };
-
-  const changedBinaryArr = mainBinary.split('');
-  const lineToChange = movingLine - 1;
-  changedBinaryArr[lineToChange] = changedBinaryArr[lineToChange] === '1' ? '0' : '1';
-  const changedLowerName = findTrigramByBinary(changedBinaryArr.slice(0, 3).join(''));
-  const changedUpperName = findTrigramByBinary(changedBinaryArr.slice(3, 6).join(''));
-  const changedHex: HexInfo = {
-    name: HEXAGRAMS_TABLE[changedUpperName][changedLowerName],
-    upperName: changedUpperName,
-    lowerName: changedLowerName,
-  };
-
-  const { body, use } = getBodyUseRoles({ upperName, lowerName, movingLine });
-
-  return {
+    movingLine,
+    month,
     timeInfo: `${lunar.getYearInGanZhi()}年${lunar.getMonthInChinese()}月${lunar.getDayInChinese()} ${lunar.getTimeZhi()}时`,
     formula: `上卦:(${yearZhiIndex}+${month}+${day})%8=${upperIndexRaw}; 下卦:(${yearZhiIndex}+${month}+${day}+${hourZhiIndex})%8=${lowerIndexRaw}; 动爻:${movingLine}`,
-    mainHex,
-    mutualHex,
-    changedHex,
+    stabilityNote: '本卦由农历年月日时推得，同一时辰内相同问题不宜重复起卦。',
+  });
+}
+
+export function castByNumbers(input: {
+  numbers: number[];
+  timestamp?: string | number | Date;
+}): CastResult {
+  const normalizedNumbers = input.numbers
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .map((value) => Math.trunc(value));
+
+  if (normalizedNumbers.length < 2) {
+    throw new Error('报数起卦至少需要两个数字');
+  }
+
+  const date = input.timestamp === undefined ? new Date() : new Date(input.timestamp);
+  const lunar = Solar.fromDate(date).getLunar();
+  const month = Math.abs(lunar.getMonth());
+  const [upperSource, lowerSource, movingSourceInput] = normalizedNumbers;
+  const movingSource = movingSourceInput ?? upperSource + lowerSource;
+  const upperIndexRaw = upperSource % 8;
+  const lowerIndexRaw = lowerSource % 8;
+  const movingLine = normalizeMovingLine(movingSource);
+  const upperName = TRIGRAM_MAP[normalizeTrigramIndex(upperIndexRaw)];
+  const lowerName = TRIGRAM_MAP[normalizeTrigramIndex(lowerIndexRaw)];
+
+  return buildCastResult({
+    castMethod: 'numbers',
+    castMethodLabel: '报数起卦',
+    upperName,
+    lowerName,
     movingLine,
-    body,
-    use,
-    relation: analyzeRelation(body.element, use.element),
-    seasonal: getSeasonalAnalysis(body.element, month),
-    omen: {
-      used: false,
-      summary: '本次未采外应，不编造声色人事之灵应；以体用五行生克为主。',
-    },
-  };
+    month,
+    timeInfo: `报数：${normalizedNumbers.join('、')}；起卦时令：${lunar.getYearInGanZhi()}年${lunar.getMonthInChinese()}月${lunar.getDayInChinese()} ${lunar.getTimeZhi()}时`,
+    formula: `报数起卦: 上卦:${upperSource}%8=${upperIndexRaw}; 下卦:${lowerSource}%8=${lowerIndexRaw}; 动爻:${movingSource}%6=${movingLine}`,
+  });
 }

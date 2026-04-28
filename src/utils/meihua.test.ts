@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   analyzeRelation,
+  castByNumbers,
   castMeihua,
   getBodyUseRoles,
   getSeasonalAnalysis,
@@ -45,5 +46,15 @@ assert.ok(leapMonthCast.mainHex.name);
 assert.ok(leapMonthCast.body);
 assert.ok(leapMonthCast.use);
 assert.ok(leapMonthCast.relation);
+
+const numberCast = castByNumbers({
+  numbers: [1, 8, 6],
+  timestamp: '2020-05-23T12:00:00+08:00',
+});
+assert.equal(numberCast.castMethod, 'numbers');
+assert.equal(numberCast.castMethodLabel, '报数起卦');
+assert.equal(numberCast.mainHex.name, '天地否');
+assert.equal(numberCast.movingLine, 6);
+assert.ok(numberCast.formula.includes('报数'));
 
 console.log('meihua deterministic rules passed');

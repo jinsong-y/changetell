@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Header from './components/Header';
-import InputView from './components/InputView';
+import InputView, { type CastOptions } from './components/InputView';
 import ResultView from './components/ResultView';
 import LoadingView from './components/LoadingView';
 
@@ -9,14 +9,21 @@ export default function App() {
   const [resultData, setResultData] = useState<any>(null);
   const [error, setError] = useState('');
 
-  const handleCast = async (prompt: string, timestamp: string) => {
+  const handleCast = async (prompt: string, timestamp: string, options?: CastOptions) => {
     setView('loading');
     setError('');
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, timestamp }),
+        body: JSON.stringify({
+          prompt,
+          timestamp,
+          castMethod: options?.method ?? 'time',
+          castPayload: {
+            numbers: options?.numbers,
+          },
+        }),
       });
 
       const text = await response.text();

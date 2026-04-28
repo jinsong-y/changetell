@@ -85,8 +85,11 @@ interface OmenAnalysis {
 }
 
 interface DivinationResult {
+  castMethod?: 'time' | 'numbers';
+  castMethodLabel?: string;
   timeAnalysis: string;
   formula?: string;
+  stabilityNote?: string;
   mainHex: HexInfo;
   mutualHex: HexInfo;
   changedHex: HexInfo;
@@ -134,6 +137,8 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
     }
   ];
   const seasonLabel = data.seasonal.season ?? data.seasonal.seasonName ?? '时令';
+  const castMethodLabel = data.castMethodLabel ?? '时间起卦';
+  const stabilityNote = data.stabilityNote ?? (data.castMethod === 'numbers' ? '' : '本卦由农历年月日时推得，同一时辰内相同问题不宜重复起卦。');
 
   return (
     <motion.div 
@@ -151,7 +156,7 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
         </div>
         <div className="text-xs font-medium text-[#c0caf5] flex items-start gap-2 opacity-80 mt-1 min-w-0">
           <span className="w-4 text-center shrink-0">·</span>
-          <span className="min-w-0 break-words">时间起卦：{data.timeAnalysis}</span>
+          <span className="min-w-0 break-words">{castMethodLabel}：{data.timeAnalysis}</span>
         </div>
         {data.formula && (
           <div className="text-xs font-medium text-[#565f89] flex items-start gap-2 opacity-80 min-w-0">
@@ -163,6 +168,12 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
           <div className="text-xs font-medium text-[#e0af68] flex items-start gap-2 opacity-90 min-w-0">
             <span className="w-4 text-center shrink-0">·</span>
             <span className="min-w-0 break-words">动爻：第{data.movingLine}爻</span>
+          </div>
+        )}
+        {stabilityNote && (
+          <div className="text-xs font-medium text-[#73daca] flex items-start gap-2 opacity-90 min-w-0">
+            <span className="w-4 text-center shrink-0">·</span>
+            <span className="min-w-0 break-words">{stabilityNote}</span>
           </div>
         )}
       </motion.section>
