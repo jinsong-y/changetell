@@ -9,6 +9,27 @@ const getTrigramByCode = (code: string): TrigramName => {
 
 export const getCastTimestamp = (date = new Date()) => date.toISOString();
 
+export interface TimeCastRecord {
+  key: string;
+}
+
+export const normalizePromptForRepeat = (prompt: string) => prompt.trim().replace(/\s+/g, ' ');
+
+export const getChineseZhiHourIndex = (date = new Date()) => {
+  const hour = date.getHours();
+  return hour === 23 ? 0 : Math.floor((hour + 1) / 2);
+};
+
+export const getTimeCastRepeatKey = (prompt: string, date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${normalizePromptForRepeat(prompt)}|${year}-${month}-${day}:${getChineseZhiHourIndex(date)}`;
+};
+
+export const isRepeatTimeCast = (lastRecord: TimeCastRecord | null, prompt: string, date = new Date()) =>
+  Boolean(lastRecord && normalizePromptForRepeat(prompt) && lastRecord.key === getTimeCastRepeatKey(prompt, date));
+
 export type CastMethod = 'time' | 'numbers';
 
 export interface CastOptions {
@@ -16,21 +37,42 @@ export interface CastOptions {
   numbers?: number[];
 }
 
+const NUMBER_CAST_MIN = 1;
+const NUMBER_CAST_MAX = 999;
+const REQUIRED_NUMBER_ERROR = '上卦数和下卦数需填写 1 到 999 的整数';
+const MOVING_NUMBER_ERROR = '动爻数如填写，也需是 1 到 999 的整数';
+
 const parseNumberInput = (value: string) => {
-  if (!value.trim()) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? Math.trunc(parsed) : null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!/^\d+$/.test(trimmed)) return Number.NaN;
+
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed >= NUMBER_CAST_MIN && parsed <= NUMBER_CAST_MAX
+    ? parsed
+    : Number.NaN;
 };
 
 export const getNumberCastPayload = (inputs: string[]) => {
   const upper = parseNumberInput(inputs[0] ?? '');
   const lower = parseNumberInput(inputs[1] ?? '');
   const moving = parseNumberInput(inputs[2] ?? '');
-  const canCast = upper !== null && lower !== null;
+  const hasRequiredNumbers = upper !== null && lower !== null;
+  const requiredNumbersValid = hasRequiredNumbers && Number.isFinite(upper) && Number.isFinite(lower);
+  const movingValid = moving === null || Number.isFinite(moving);
+  const canCast = requiredNumbersValid && movingValid;
+
+  let error = '';
+  if (!requiredNumbersValid && (inputs[0]?.trim() || inputs[1]?.trim())) {
+    error = REQUIRED_NUMBER_ERROR;
+  } else if (requiredNumbersValid && !movingValid) {
+    error = MOVING_NUMBER_ERROR;
+  }
 
   return {
     canCast,
-    numbers: canCast ? [upper, lower, ...(moving === null ? [] : [moving])] : [],
+    numbers: canCast ? [upper as number, lower as number, ...(moving === null ? [] : [moving as number])] : [],
+    error,
   };
 };
 

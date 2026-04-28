@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import InputView, { getCastTimestamp, getNumberCastPayload, getVisualHexagram } from '../components/InputView';
+import InputView, {
+  getCastTimestamp,
+  getChineseZhiHourIndex,
+  getNumberCastPayload,
+  getTimeCastRepeatKey,
+  getVisualHexagram,
+  isRepeatTimeCast,
+  normalizePromptForRepeat,
+} from '../components/InputView';
 import LoadingView, { LOADING_SEQUENCE } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
 import { castMeihua } from './meihua';
@@ -12,9 +20,44 @@ assert.equal(getCastTimestamp(date), '2026-04-28T08:09:10.000Z');
 assert.equal(getVisualHexagram([7, 7, 7, 8, 8, 8]).name, '天地否');
 assert.equal(getVisualHexagram([8, 8, 8, 7, 7, 7]).name, '地天泰');
 
-assert.deepEqual(getNumberCastPayload(['1', '8', '6']), { canCast: true, numbers: [1, 8, 6] });
-assert.deepEqual(getNumberCastPayload(['1', '8', '']), { canCast: true, numbers: [1, 8] });
+assert.deepEqual(getNumberCastPayload(['1', '8', '6']), { canCast: true, numbers: [1, 8, 6], error: '' });
+assert.deepEqual(getNumberCastPayload(['1', '8', '']), { canCast: true, numbers: [1, 8], error: '' });
 assert.equal(getNumberCastPayload(['1', '', '6']).canCast, false);
+assert.deepEqual(getNumberCastPayload(['999', '1', '2']), { canCast: true, numbers: [999, 1, 2], error: '' });
+assert.deepEqual(getNumberCastPayload(['1', '8', '']), { canCast: true, numbers: [1, 8], error: '' });
+assert.equal(getNumberCastPayload(['0', '8', '']).error, '上卦数和下卦数需填写 1 到 999 的整数');
+assert.equal(getNumberCastPayload(['1', '1000', '']).error, '上卦数和下卦数需填写 1 到 999 的整数');
+assert.equal(getNumberCastPayload(['1', '8', '1000']).error, '动爻数如填写，也需是 1 到 999 的整数');
+assert.equal(getNumberCastPayload(['1.5', '8', '']).canCast, false);
+
+assert.equal(normalizePromptForRepeat('  去 上海   发展？ '), '去 上海 发展？');
+assert.equal(getChineseZhiHourIndex(new Date('2026-04-28T23:30:00+08:00')), 0);
+assert.equal(getChineseZhiHourIndex(new Date('2026-04-28T01:30:00+08:00')), 1);
+assert.equal(getTimeCastRepeatKey('问事', new Date('2026-04-28T01:30:00+08:00')), '问事|2026-04-28:1');
+assert.equal(
+  isRepeatTimeCast(
+    { key: '问事|2026-04-28:1' },
+    ' 问事 ',
+    new Date('2026-04-28T01:50:00+08:00'),
+  ),
+  true,
+);
+assert.equal(
+  isRepeatTimeCast(
+    { key: '问事|2026-04-28:1' },
+    '另一件事',
+    new Date('2026-04-28T01:50:00+08:00'),
+  ),
+  false,
+);
+assert.equal(
+  isRepeatTimeCast(
+    { key: '问事|2026-04-28:1' },
+    '问事',
+    new Date('2026-04-28T03:01:00+08:00'),
+  ),
+  false,
+);
 
 assert.ok(LOADING_SEQUENCE.includes('定体用生克...'));
 assert.ok(!LOADING_SEQUENCE.some((step) => step.includes('爻辞')));
