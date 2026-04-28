@@ -20,11 +20,20 @@ export const getChineseZhiHourIndex = (date = new Date()) => {
   return hour === 23 ? 0 : Math.floor((hour + 1) / 2);
 };
 
+const getTimeCastDateKey = (date: Date) => {
+  const keyDate = new Date(date);
+  if (date.getHours() === 23) {
+    keyDate.setDate(keyDate.getDate() + 1);
+  }
+
+  const year = keyDate.getFullYear();
+  const month = String(keyDate.getMonth() + 1).padStart(2, '0');
+  const day = String(keyDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const getTimeCastRepeatKey = (prompt: string, date = new Date()) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${normalizePromptForRepeat(prompt)}|${year}-${month}-${day}:${getChineseZhiHourIndex(date)}`;
+  return `${normalizePromptForRepeat(prompt)}|${getTimeCastDateKey(date)}:${getChineseZhiHourIndex(date)}`;
 };
 
 export const isRepeatTimeCast = (lastRecord: TimeCastRecord | null, prompt: string, date = new Date()) =>

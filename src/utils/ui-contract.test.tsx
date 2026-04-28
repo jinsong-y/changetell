@@ -31,14 +31,27 @@ assert.equal(getNumberCastPayload(['1', '8', '1000']).error, '动爻数如填写
 assert.equal(getNumberCastPayload(['1.5', '8', '']).canCast, false);
 
 assert.equal(normalizePromptForRepeat('  去 上海   发展？ '), '去 上海 发展？');
-assert.equal(getChineseZhiHourIndex(new Date('2026-04-28T23:30:00+08:00')), 0);
-assert.equal(getChineseZhiHourIndex(new Date('2026-04-28T01:30:00+08:00')), 1);
-assert.equal(getTimeCastRepeatKey('问事', new Date('2026-04-28T01:30:00+08:00')), '问事|2026-04-28:1');
+assert.equal(getChineseZhiHourIndex(new Date(2026, 3, 28, 23, 30)), 0);
+assert.equal(getChineseZhiHourIndex(new Date(2026, 3, 29, 0, 30)), 0);
+assert.equal(getChineseZhiHourIndex(new Date(2026, 3, 28, 1, 30)), 1);
+assert.equal(getTimeCastRepeatKey('问事', new Date(2026, 3, 28, 1, 30)), '问事|2026-04-28:1');
+assert.equal(
+  getTimeCastRepeatKey('问事', new Date(2026, 3, 28, 23, 30)),
+  getTimeCastRepeatKey(' 问事 ', new Date(2026, 3, 29, 0, 30)),
+);
+assert.equal(
+  isRepeatTimeCast(
+    { key: getTimeCastRepeatKey('问事', new Date(2026, 3, 28, 23, 30)) },
+    ' 问事 ',
+    new Date(2026, 3, 29, 0, 30),
+  ),
+  true,
+);
 assert.equal(
   isRepeatTimeCast(
     { key: '问事|2026-04-28:1' },
     ' 问事 ',
-    new Date('2026-04-28T01:50:00+08:00'),
+    new Date(2026, 3, 28, 1, 50),
   ),
   true,
 );
@@ -46,7 +59,7 @@ assert.equal(
   isRepeatTimeCast(
     { key: '问事|2026-04-28:1' },
     '另一件事',
-    new Date('2026-04-28T01:50:00+08:00'),
+    new Date(2026, 3, 28, 1, 50),
   ),
   false,
 );
@@ -54,7 +67,7 @@ assert.equal(
   isRepeatTimeCast(
     { key: '问事|2026-04-28:1' },
     '问事',
-    new Date('2026-04-28T03:01:00+08:00'),
+    new Date(2026, 3, 28, 3, 1),
   ),
   false,
 );
