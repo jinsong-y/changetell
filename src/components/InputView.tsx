@@ -265,24 +265,40 @@ export default function InputView({
             </div>
 
             {castMethod === 'numbers' && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {['上卦数', '下卦数', '动爻数(可选)'].map((label, index) => (
-                  <label key={label} className="border border-[#414868] bg-[#24283b] p-2 flex flex-col gap-1 focus-within:border-[#bb9af7] transition-colors">
-                    <span className="text-[10px] text-[#565f89] tracking-widest">{label}</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={numberInputs[index]}
-                      onChange={(event) => {
-                        const next = [...numberInputs];
-                        next[index] = event.target.value.replace(/[^\d-]/g, '');
-                        setNumberInputs(next);
-                      }}
-                      className="bg-transparent border-none outline-none text-[#c0caf5] text-sm placeholder-[#565f89] focus:ring-0"
-                      placeholder={index < 2 ? '必填' : '可空'}
-                    />
-                  </label>
-                ))}
+              <div className="flex flex-col gap-3">
+                <p className="text-xs text-[#8a98c9] leading-relaxed">
+                  静心后，随心写下 2 到 3 个整数。不必计算，不必选吉数。范围 1-999。
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[
+                    { label: '上卦数', hint: '随心第一个整数', required: true },
+                    { label: '下卦数', hint: '随心第二个整数', required: true },
+                    { label: '动爻数', hint: '可选，不填则以前两数相加定动爻', required: false },
+                  ].map((field, index) => (
+                    <label key={field.label} className="border border-[#414868] bg-[#24283b] p-2 flex flex-col gap-1 focus-within:border-[#bb9af7] transition-colors">
+                      <span className="text-[10px] text-[#565f89] tracking-widest">
+                        {field.label}{field.required ? ' · 必填' : ' · 可选'}
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={numberInputs[index]}
+                        onChange={(event) => {
+                          const next = [...numberInputs];
+                          next[index] = event.target.value.replace(/\D/g, '').slice(0, 3);
+                          setNumberInputs(next);
+                        }}
+                        className="bg-transparent border-none outline-none text-[#c0caf5] text-sm placeholder-[#565f89] focus:ring-0"
+                        placeholder={field.hint}
+                        aria-label={field.label}
+                      />
+                    </label>
+                  ))}
+                </div>
+                {numberCastPayload.error && (
+                  <p className="text-xs text-[#f7768e] leading-relaxed">{numberCastPayload.error}</p>
+                )}
               </div>
             )}
             

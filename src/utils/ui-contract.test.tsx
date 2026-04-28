@@ -162,6 +162,17 @@ assert.ok(repeatWarningHtml.includes('同一时辰内相同问题不宜重复起
 assert.ok(repeatWarningHtml.includes('改用报数起卦'));
 assert.ok(repeatWarningHtml.includes('仍用时辰起卦'));
 
+const numberInputHtml = renderToStaticMarkup(<InputView onCast={() => {}} initialCastMethod="numbers" />);
+for (const text of [
+  '静心后，随心写下 2 到 3 个整数。不必计算，不必选吉数。',
+  '随心第一个整数',
+  '随心第二个整数',
+  '可选，不填则以前两数相加定动爻',
+  '1-999',
+]) {
+  assert.ok(numberInputHtml.includes(text), `missing ${text}`);
+}
+
 const loadingHtml = renderToStaticMarkup(<LoadingView />);
 assert.ok(loadingHtml.includes('正在起卦'));
 
