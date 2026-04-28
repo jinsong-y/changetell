@@ -36,8 +36,17 @@ export const getTimeCastRepeatKey = (prompt: string, date = new Date()) => {
   return `${normalizePromptForRepeat(prompt)}|${getTimeCastDateKey(date)}:${getChineseZhiHourIndex(date)}`;
 };
 
-export const isRepeatTimeCast = (lastRecord: TimeCastRecord | null, prompt: string, date = new Date()) =>
-  Boolean(lastRecord && normalizePromptForRepeat(prompt) && lastRecord.key === getTimeCastRepeatKey(prompt, date));
+export const isRepeatTimeCast = (
+  records: TimeCastRecord | TimeCastRecord[] | null,
+  prompt: string,
+  date = new Date(),
+) => {
+  if (!records || !normalizePromptForRepeat(prompt)) return false;
+  const repeatKey = getTimeCastRepeatKey(prompt, date);
+  return Array.isArray(records)
+    ? records.some((record) => record.key === repeatKey)
+    : records.key === repeatKey;
+};
 
 export type CastMethod = 'time' | 'numbers';
 
@@ -46,11 +55,11 @@ export interface CastOptions {
   numbers?: number[];
 }
 
-interface InputViewProps {
+export interface InputViewProps {
   onCast: (prompt: string, timestamp: string, options?: CastOptions) => void;
   repeatWarning?: string;
   onUseNumbers?: () => void;
-  onContinueTime?: () => void;
+  onContinueTime?: (prompt: string, timestamp: string) => void;
   forceNumbersMode?: boolean;
   initialCastMethod?: CastMethod;
 }
@@ -223,7 +232,10 @@ export default function InputView({
                   </button>
                   <button
                     type="button"
-                    onClick={onContinueTime}
+                    onClick={() => {
+                      if (!inputVal.trim()) return;
+                      onContinueTime?.(inputVal, getCastTimestamp());
+                    }}
                     className="border border-[#414868] bg-[#1a1b26] px-3 py-2 text-xs font-bold tracking-widest text-[#8a98c9]"
                   >
                     仍用时辰起卦

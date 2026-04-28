@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import Header from './components/Header';
 import InputView, {
-  getCastTimestamp,
   getTimeCastRepeatKey,
   isRepeatTimeCast,
   type CastOptions,
@@ -14,9 +13,8 @@ export default function App() {
   const [view, setView] = useState<'input' | 'loading' | 'result'>('input');
   const [resultData, setResultData] = useState<any>(null);
   const [error, setError] = useState('');
-  const [lastTimeCast, setLastTimeCast] = useState<TimeCastRecord | null>(null);
+  const [timeCastRecords, setTimeCastRecords] = useState<TimeCastRecord[]>([]);
   const [repeatWarning, setRepeatWarning] = useState('');
-  const [pendingTimeCast, setPendingTimeCast] = useState<{ prompt: string; timestamp: string } | null>(null);
   const [forceNumbersMode, setForceNumbersMode] = useState(false);
 
   const submitCast = async (prompt: string, timestamp: string, options?: CastOptions) => {
@@ -50,7 +48,8 @@ export default function App() {
       
       setResultData(data);
       if ((options?.method ?? 'time') === 'time') {
-        setLastTimeCast({ key: getTimeCastRepeatKey(prompt, new Date(timestamp)) });
+        const key = getTimeCastRepeatKey(prompt, new Date(timestamp));
+        setTimeCastRecords((records) => records.some((record) => record.key === key) ? records : [...records, { key }]);
       }
       setView('result');
     } catch (err: any) {
@@ -63,8 +62,7 @@ export default function App() {
   const handleCast = async (prompt: string, timestamp: string, options?: CastOptions) => {
     setForceNumbersMode(false);
 
-    if ((options?.method ?? 'time') === 'time' && isRepeatTimeCast(lastTimeCast, prompt, new Date(timestamp))) {
-      setPendingTimeCast({ prompt, timestamp });
+    if ((options?.method ?? 'time') === 'time' && isRepeatTimeCast(timeCastRecords, prompt, new Date(timestamp))) {
       setRepeatWarning('同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。');
       return;
     }
@@ -84,13 +82,10 @@ export default function App() {
             repeatWarning={repeatWarning}
             onUseNumbers={() => {
               setRepeatWarning('');
-              setPendingTimeCast(null);
               setForceNumbersMode(true);
             }}
-            onContinueTime={() => {
-              if (!pendingTimeCast) return;
-              void submitCast(pendingTimeCast.prompt, pendingTimeCast.timestamp, { method: 'time' });
-              setPendingTimeCast(null);
+            onContinueTime={(prompt, timestamp) => {
+              void submitCast(prompt, timestamp, { method: 'time' });
             }}
             forceNumbersMode={forceNumbersMode}
           />

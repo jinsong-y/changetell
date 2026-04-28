@@ -9,6 +9,7 @@ import InputView, {
   getVisualHexagram,
   isRepeatTimeCast,
   normalizePromptForRepeat,
+  type InputViewProps,
 } from '../components/InputView';
 import LoadingView, { LOADING_SEQUENCE } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
@@ -71,6 +72,34 @@ assert.equal(
   ),
   false,
 );
+assert.equal(
+  isRepeatTimeCast(
+    [
+      { key: getTimeCastRepeatKey('问事一', new Date(2026, 3, 28, 1, 30)) },
+      { key: getTimeCastRepeatKey('问事二', new Date(2026, 3, 28, 1, 40)) },
+    ],
+    '问事一',
+    new Date(2026, 3, 28, 1, 50),
+  ),
+  true,
+);
+assert.equal(
+  isRepeatTimeCast(
+    [
+      { key: getTimeCastRepeatKey('问事一', new Date(2026, 3, 28, 1, 30)) },
+      { key: getTimeCastRepeatKey('问事二', new Date(2026, 3, 28, 1, 40)) },
+    ],
+    '问事三',
+    new Date(2026, 3, 28, 1, 50),
+  ),
+  false,
+);
+
+const continueTimeContract: InputViewProps['onContinueTime'] = (prompt: string, timestamp: string) => {
+  assert.equal(typeof prompt, 'string');
+  assert.equal(typeof timestamp, 'string');
+};
+continueTimeContract?.('当前问题', getCastTimestamp(date));
 
 assert.ok(LOADING_SEQUENCE.includes('定体用生克...'));
 assert.ok(!LOADING_SEQUENCE.some((step) => step.includes('爻辞')));
