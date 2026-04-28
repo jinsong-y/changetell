@@ -1,22 +1,22 @@
 import { Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+export const LOADING_SEQUENCE = [
+  "心诚则灵，正在感应...",
+  "排布天干地支...",
+  "演化六十四卦象...",
+  "定体用生克...",
+  "起卦完成，排图呈现中。"
+];
+
 export default function LoadingView() {
   const [steps, setSteps] = useState<string[]>([]);
   
   useEffect(() => {
-    const sequences = [
-      "心诚则灵，正在感应...",
-      "排布天干地支...",
-      "演化六十四卦象...",
-      "推演爻辞变动...",
-      "起卦完成，排图呈现中。"
-    ];
-    
     let currentStep = 0;
     const interval = setInterval(() => {
-      if (currentStep < sequences.length) {
-        setSteps(prev => [...prev, sequences[currentStep]]);
+      if (currentStep < LOADING_SEQUENCE.length) {
+        setSteps(prev => [...prev, LOADING_SEQUENCE[currentStep]]);
         currentStep++;
       } else {
         clearInterval(interval);
@@ -36,7 +36,7 @@ export default function LoadingView() {
         {steps.map((step, idx) => (
           <div key={idx} className="animate-pulse">{step}</div>
         ))}
-        {steps.length < 5 && (
+        {steps.length < LOADING_SEQUENCE.length && (
           <div className="flex items-center gap-1 text-[#565f89]">
             <span>_</span>
             <span className="animate-blink w-2 h-4 bg-[#565f89] block"></span>

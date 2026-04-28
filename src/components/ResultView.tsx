@@ -80,7 +80,7 @@ interface SeasonalAnalysis {
 }
 
 interface OmenAnalysis {
-  used: false;
+  used: boolean;
   summary: string;
 }
 

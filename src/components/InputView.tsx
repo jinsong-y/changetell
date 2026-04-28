@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { HEXAGRAMS_TABLE, TRIGRAMS, type TrigramName } from '../utils/iching';
 
-const TRIGRAMS: Record<string, string> = {
-  '111': '天', '011': '泽', '101': '火', '001': '雷',
-  '110': '风', '010': '水', '100': '山', '000': '地'
+const getTrigramByCode = (code: string): TrigramName => {
+  const found = Object.entries(TRIGRAMS).find(([, binary]) => binary === code);
+  return (found?.[0] as TrigramName | undefined) ?? '天';
 };
 
-const HEXAGRAMS: Record<string, Record<string, string>> = {
-  '天': { '天': '乾为天', '泽': '天泽履', '火': '天火同人', '雷': '天雷无妄', '风': '天风姤', '水': '天水讼', '山': '天山遁', '地': '天地否' },
-  '泽': { '天': '泽天夬', '泽': '兑为泽', '火': '泽火革', '雷': '泽雷随', '风': '泽风大过', '水': '泽水困', '山': '泽山咸', '地': '泽地萃' },
-  '火': { '天': '火天大有', '泽': '火泽睽', '火': '离为火', '雷': '火雷噬嗑', '风': '火风鼎', '水': '火水未济', '山': '火山旅', '地': '火地晋' },
-  '雷': { '天': '雷天大壮', '泽': '雷泽归妹', '火': '雷火丰', '雷': '震为雷', '风': '雷风恒', '水': '雷水解', '山': '雷山小过', '地': '雷地豫' },
-  '风': { '天': '风天小畜', '泽': '风泽中孚', '火': '风火家人', '雷': '风雷益', '风': '巽为风', '水': '风水涣', '山': '风山渐', '地': '风地观' },
-  '水': { '天': '水天需', '泽': '水泽节', '火': '水火既济', '雷': '水雷屯', '风': '水风井', '水': '坎为水', '山': '水山蹇', '地': '水地比' },
-  '山': { '天': '山天大畜', '泽': '山泽损', '火': '山火贲', '雷': '山雷颐', '风': '山风蛊', '水': '山水蒙', '山': '艮为山', '地': '山地剥' },
-  '地': { '天': '地天泰', '泽': '地泽临', '火': '地火明夷', '雷': '地雷复', '风': '地风升', '水': '地水师', '山': '地山谦', '地': '坤为地' }
+export const getCastTimestamp = (date = new Date()) => date.toISOString();
+
+export const getVisualHexagram = (lines: number[]) => {
+  const upperCode = lines.slice(0, 3).map(l => l >= 8 ? '0' : '1').join('');
+  const lowerCode = lines.slice(3, 6).map(l => l >= 8 ? '0' : '1').join('');
+  const upperTri = getTrigramByCode(upperCode);
+  const lowerTri = getTrigramByCode(lowerCode);
+
+  return {
+    upperTri,
+    lowerTri,
+    name: HEXAGRAMS_TABLE[upperTri][lowerTri],
+  };
 };
 
 export default function InputView({ onCast }: { onCast: (prompt: string, timestamp: string) => void }) {
@@ -32,17 +37,12 @@ export default function InputView({ onCast }: { onCast: (prompt: string, timesta
     return () => clearInterval(interval);
   }, []);
 
-  const upperCode = visualLines.slice(0, 3).map(l => l >= 8 ? '0' : '1').join('');
-  const lowerCode = visualLines.slice(3, 6).map(l => l >= 8 ? '0' : '1').join('');
-  const upperTri = TRIGRAMS[upperCode];
-  const lowerTri = TRIGRAMS[lowerCode];
-  const hexName = HEXAGRAMS[upperTri][lowerTri];
+  const { upperTri, lowerTri, name: hexName } = getVisualHexagram(visualLines);
 
   const handleCastClick = () => {
     if (inputVal.trim()) {
-      const now = new Date();
       // 传递本地 ISO 时间字符串，以便后端进行梅花易数推演
-      onCast(inputVal, now.toLocaleString('zh-CN', { hour12: false }));
+      onCast(inputVal, getCastTimestamp());
     }
   };
 
