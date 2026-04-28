@@ -46,10 +46,8 @@ function castByRequest(input: {
   return castMeihua(input.timestamp);
 }
 
-const isValidNumberCastValue = (value: unknown) => {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 999;
-};
+const isValidNumberCastValue = (value: unknown) =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 999;
 
 export function getCastRequestValidationError(input: {
   prompt?: unknown;
