@@ -46,6 +46,11 @@ function castByRequest(input: {
   return castMeihua(input.timestamp);
 }
 
+const isValidNumberCastValue = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 999;
+};
+
 export function getCastRequestValidationError(input: {
   prompt?: unknown;
   castMethod?: unknown;
@@ -57,9 +62,14 @@ export function getCastRequestValidationError(input: {
     const numbers = input.castPayload?.numbers;
     const upper = Array.isArray(numbers) ? numbers[0] : undefined;
     const lower = Array.isArray(numbers) ? numbers[1] : undefined;
+    const moving = Array.isArray(numbers) ? numbers[2] : undefined;
 
-    if (!Number.isFinite(Number(upper)) || !Number.isFinite(Number(lower))) {
+    if (upper === undefined || lower === undefined) {
       return '报数起卦至少需要填写上卦数和下卦数';
+    }
+
+    if (!isValidNumberCastValue(upper) || !isValidNumberCastValue(lower) || (moving !== undefined && !isValidNumberCastValue(moving))) {
+      return '报数起卦数字需为 1 到 999 的整数';
     }
   }
 
