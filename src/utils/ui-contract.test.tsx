@@ -119,6 +119,7 @@ const resultHtml = renderToStaticMarkup(
     data={{
       timeAnalysis: cast.timeInfo,
       formula: cast.formula,
+      serviceNotice: '天机文辞服务暂时繁忙，已先按本地卦象给出基础解读；若需更完整解读，请 5 分钟后再试。',
       mainHex: { name: cast.mainHex.name, meaning: '本卦表示当前。' },
       mutualHex: { name: cast.mutualHex.name, meaning: '互卦表示隐情。' },
       changedHex: { name: cast.changedHex.name, meaning: '变卦表示趋势。' },
@@ -140,7 +141,7 @@ const resultHtml = renderToStaticMarkup(
   />,
 );
 
-for (const text of ['01', '排出三卦', '02', '分辨体用', '03', '五行生克论吉凶', '04', '时令与外应', '05', '综合断语与核心建议', '未取外应', '同一时辰内相同问题不宜重复起卦']) {
+for (const text of ['01', '排出三卦', '02', '分辨体用', '03', '五行生克论吉凶', '04', '时令与外应', '05', '综合断语与核心建议', '未取外应', '同一时辰内相同问题不宜重复起卦', '5 分钟后再试']) {
   assert.ok(resultHtml.includes(text), `missing ${text}`);
 }
 assert.ok(!resultHtml.includes('undefined'));

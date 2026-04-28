@@ -1,4 +1,4 @@
-import { CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getBinaryByHexName } from '../utils/iching';
 
@@ -90,6 +90,7 @@ interface DivinationResult {
   timeAnalysis: string;
   formula?: string;
   stabilityNote?: string;
+  serviceNotice?: string;
   mainHex: HexInfo;
   mutualHex: HexInfo;
   changedHex: HexInfo;
@@ -174,6 +175,12 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
           <div className="text-xs font-medium text-[#73daca] flex items-start gap-2 opacity-90 min-w-0">
             <span className="w-4 text-center shrink-0">·</span>
             <span className="min-w-0 break-words">{stabilityNote}</span>
+          </div>
+        )}
+        {data.serviceNotice && (
+          <div className="text-xs font-medium text-[#e0af68] flex items-start gap-2 opacity-95 min-w-0">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span className="min-w-0 break-words">{data.serviceNotice}</span>
           </div>
         )}
       </motion.section>

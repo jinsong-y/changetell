@@ -11,6 +11,8 @@ const RELATION_SUMMARY: Record<string, string> = {
 
 type DivinationData = ReturnType<typeof castMeihua>;
 
+export const AI_BUSY_NOTICE = '天机文辞服务暂时繁忙，已先按本地卦象给出基础解读；若需更完整解读，请 5 分钟后再试。';
+
 function withDeterministicSummaries(divinationData: DivinationData) {
   const relation = {
     ...divinationData.relation,
@@ -29,6 +31,33 @@ function withDeterministicSummaries(divinationData: DivinationData) {
     relation,
     seasonal,
   };
+}
+
+type EnrichedDivinationData = ReturnType<typeof withDeterministicSummaries>;
+
+export const isGeminiHighDemandError = (error: unknown) => {
+  const candidate = error as { status?: unknown; statusText?: unknown; message?: unknown };
+  const message = String(candidate?.message ?? error ?? '');
+  return candidate?.status === 503
+    || String(candidate?.statusText ?? '').includes('Service Unavailable')
+    || (message.includes('503') && message.includes('high demand'));
+};
+
+export async function withGeminiHighDemandRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 1,
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt >= maxRetries || !isGeminiHighDemandError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('Gemini retry exhausted');
 }
 
 function castByRequest(input: {
@@ -80,6 +109,90 @@ const asText = (value: unknown, fallback: string) =>
 const asObject = (value: unknown) =>
   value && typeof value === 'object' ? value as Record<string, unknown> : {};
 
+export function buildDivinationResponse(
+  divinationData: EnrichedDivinationData,
+  aiPayloadInput: unknown = {},
+  serviceNotice?: string,
+) {
+  const aiPayload = asObject(aiPayloadInput);
+  const aiMainHex = asObject(aiPayload.mainHex);
+  const aiMutualHex = asObject(aiPayload.mutualHex);
+  const aiChangedHex = asObject(aiPayload.changedHex);
+  const {
+    castMethodLabel,
+    timeInfo,
+    formula,
+    stabilityNote,
+    mainHexName,
+    mutualHexName,
+    changedHexName,
+    movingLine,
+    body,
+    use,
+    relation,
+    seasonal,
+    omen,
+  } = divinationData;
+
+  return {
+    timeAnalysis: asText(
+      aiPayload.timeAnalysis,
+      `${castMethodLabel}：${timeInfo}，按公式${formula}排出本卦${mainHexName}、互卦${mutualHexName}、变卦${changedHexName}，动爻为第${movingLine}爻。`,
+    ),
+    mainHex: {
+      name: mainHexName,
+      meaning: asText(aiMainHex.meaning, `${mainHexName}代表开始/当前状态。`),
+    },
+    mutualHex: {
+      name: mutualHexName,
+      meaning: asText(aiMutualHex.meaning, `${mutualHexName}代表中间过程/隐情。`),
+    },
+    changedHex: {
+      name: changedHexName,
+      meaning: asText(aiChangedHex.meaning, `${changedHexName}代表最终结果/趋势。`),
+    },
+    bodyUseAnalysis: asText(
+      aiPayload.bodyUseAnalysis,
+      `体卦为${body.name}，位在${body.position === 'upper' ? '上卦' : '下卦'}，五行属${body.element}；用卦为${use.name}，位在${use.position === 'upper' ? '上卦' : '下卦'}，五行属${use.element}。`,
+    ),
+    fiveElementAnalysis: asText(
+      aiPayload.fiveElementAnalysis,
+      `${body.element}与${use.element}形成${relation.relation}，核心吉凶为${relation.status}。${relation.summary}`,
+    ),
+    seasonalAnalysis: asText(aiPayload.seasonalAnalysis, seasonal.summary),
+    omenAnalysis: asText(aiPayload.omenAnalysis, omen.summary),
+    meaning: asText(
+      aiPayload.meaning,
+      `本断以体用五行生克为主，${relation.summary}本卦看当前，互卦看过程，变卦看趋势。`,
+    ),
+    advice: asText(
+      aiPayload.advice,
+      relation.status === '大凶' || relation.status === '不利'
+        ? '宜先退守审势，减少消耗，待条件转顺后再推进。'
+        : '可顺势推进，但仍需守正稳行，以时令外应为辅，不可轻躁。',
+    ),
+    formula,
+    castMethod: divinationData.castMethod,
+    castMethodLabel,
+    stabilityNote,
+    mainHexName,
+    mutualHexName,
+    changedHexName,
+    movingLine,
+    body,
+    use,
+    relation,
+    seasonal,
+    omen,
+    serviceNotice,
+    overallStatus: relation.status,
+  };
+}
+
+export function buildLocalFallbackResponse(divinationData: DivinationData) {
+  return buildDivinationResponse(withDeterministicSummaries(divinationData), {}, AI_BUSY_NOTICE);
+}
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -94,7 +207,7 @@ export default async function handler(req: any, res: any) {
   if (validationError) return res.status(400).json({ error: validationError });
 
   try {
-    const divinationData = castByRequest({ castMethod, castPayload, timestamp });
+    const divinationData = withDeterministicSummaries(castByRequest({ castMethod, castPayload, timestamp }));
     const {
       castMethodLabel,
       timeInfo,
@@ -159,64 +272,20 @@ ${stabilityNote ? `- 起卦提示：${stabilityNote}` : ''}
   "overallStatus": "${relation.status}"
 }`;
 
-    const result = await model.generateContent([systemPrompt, `用户求问：${prompt}`]);
-    const response = await result.response;
-    const text = response.text();
+    try {
+      const text = await withGeminiHighDemandRetry(async () => {
+        const result = await model.generateContent([systemPrompt, `用户求问：${prompt}`]);
+        const response = await result.response;
+        return response.text();
+      });
 
-    const aiPayload = JSON.parse(text);
-    const aiMainHex = asObject(aiPayload.mainHex);
-    const aiMutualHex = asObject(aiPayload.mutualHex);
-    const aiChangedHex = asObject(aiPayload.changedHex);
+      return res.status(200).json(buildDivinationResponse(divinationData, JSON.parse(text)));
+    } catch (error) {
+      if (!isGeminiHighDemandError(error)) throw error;
 
-    return res.status(200).json({
-      timeAnalysis: asText(
-        aiPayload.timeAnalysis,
-        `${castMethodLabel}：${timeInfo}，按公式${formula}排出本卦${mainHexName}、互卦${mutualHexName}、变卦${changedHexName}，动爻为第${movingLine}爻。`,
-      ),
-      mainHex: {
-        name: mainHexName,
-        meaning: asText(aiMainHex.meaning, `${mainHexName}代表开始/当前状态。`),
-      },
-      mutualHex: {
-        name: mutualHexName,
-        meaning: asText(aiMutualHex.meaning, `${mutualHexName}代表中间过程/隐情。`),
-      },
-      changedHex: {
-        name: changedHexName,
-        meaning: asText(aiChangedHex.meaning, `${changedHexName}代表最终结果/趋势。`),
-      },
-      bodyUseAnalysis: asText(
-        aiPayload.bodyUseAnalysis,
-        `体卦为${body.name}，位在${body.position === 'upper' ? '上卦' : '下卦'}，五行属${body.element}；用卦为${use.name}，位在${use.position === 'upper' ? '上卦' : '下卦'}，五行属${use.element}。`,
-      ),
-      fiveElementAnalysis: asText(
-        aiPayload.fiveElementAnalysis,
-        `${body.element}与${use.element}形成${relation.relation}，核心吉凶为${relation.status}。${relation.summary}`,
-      ),
-      seasonalAnalysis: asText(aiPayload.seasonalAnalysis, seasonal.summary),
-      omenAnalysis: asText(aiPayload.omenAnalysis, omen.summary),
-      meaning: asText(
-        aiPayload.meaning,
-        `本断以体用五行生克为主，${relation.summary}本卦看当前，互卦看过程，变卦看趋势。`,
-      ),
-      advice: asText(
-        aiPayload.advice,
-        relation.status === '大凶' || relation.status === '不利'
-          ? '宜先退守审势，减少消耗，待条件转顺后再推进。'
-          : '可顺势推进，但仍需守正稳行，以时令外应为辅，不可轻躁。',
-      ),
-      formula,
-      castMethod: divinationData.castMethod,
-      castMethodLabel,
-      stabilityNote,
-      movingLine,
-      body,
-      use,
-      relation,
-      seasonal,
-      omen,
-      overallStatus: relation.status,
-    });
+      console.warn("Gemini high demand fallback:", error);
+      return res.status(200).json(buildDivinationResponse(divinationData, {}, AI_BUSY_NOTICE));
+    }
   } catch (error: any) {
     console.error("Divination/Gemini Error:", error);
     return res.status(500).json({ error: "天机运转受阻，请稍后再试" });
