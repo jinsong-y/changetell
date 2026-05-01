@@ -8,6 +8,7 @@ import {
   normalizeLocale,
   withGeminiHighDemandRetry,
 } from '../../api/chat';
+import { displayRequired } from '../../api/locale';
 import { castMeihua } from './meihua';
 
 assert.equal(normalizeLocale('zh-CN'), 'zh-CN');
@@ -122,6 +123,14 @@ assert.ok(!/[\u4e00-\u9fff]/.test(englishResponse.mainHex.name));
 assert.ok(englishResponse.omenAnalysis.includes('No external omen'));
 assert.equal(getServiceErrorMessage('en'), 'The interpretation service is temporarily unavailable. Please try again later.');
 assert.equal(getServiceErrorMessage('zh-CN'), '天机运转受阻，请稍后再试');
+assert.throws(
+  () => buildDivinationResponse(englishCast, { meaning: '这是中文泄漏', mainHex: { meaning: '本卦中文' } }, 'en'),
+  /English AI payload contains Chinese/,
+);
+assert.throws(
+  () => displayRequired('en', '未映射中文', 'hexagram'),
+  /Missing English display mapping/,
+);
 
 const englishPrompt = buildSystemPrompt(castMeihua('2026-04-28T13:34:52+08:00'), 'en');
 assert.ok(englishPrompt.includes('Output only English'));

@@ -124,14 +124,28 @@ export const HEXAGRAM_EN: Record<string, string> = {
   坤为地: 'Field',
 };
 
+const CJK_PATTERN = /[\u4e00-\u9fff]/;
+
+const displayEnglish = (value: string) =>
+  HEXAGRAM_EN[value]
+  ?? TRIGRAM_EN[value as TrigramName]
+  ?? ELEMENT_EN[value as ElementName]
+  ?? RELATION_EN[value as RelationName]
+  ?? STATUS_EN[value as RelationStatus]
+  ?? STRENGTH_EN[value as SeasonalStrength]
+  ?? SEASON_EN[value];
+
 export const display = (locale: Locale, value: string) => {
   if (locale === 'zh-CN') return value;
-  return HEXAGRAM_EN[value]
-    ?? TRIGRAM_EN[value as TrigramName]
-    ?? ELEMENT_EN[value as ElementName]
-    ?? RELATION_EN[value as RelationName]
-    ?? STATUS_EN[value as RelationStatus]
-    ?? STRENGTH_EN[value as SeasonalStrength]
-    ?? SEASON_EN[value]
-    ?? value;
+  return displayEnglish(value) ?? value;
+};
+
+export const displayRequired = (locale: Locale, value: string, category: string) => {
+  if (locale === 'zh-CN') return value;
+  const mapped = displayEnglish(value);
+  if (mapped) return mapped;
+  if (CJK_PATTERN.test(value)) {
+    throw new Error(`Missing English display mapping for ${category}: ${value}`);
+  }
+  return value;
 };

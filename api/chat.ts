@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { castByNumbers, castMeihua, type CastMethod } from "./meihua.js";
-import { display, normalizeLocale, type Locale } from './locale.js';
+import { displayRequired, normalizeLocale, type Locale } from './locale.js';
 
 export { normalizeLocale };
 
@@ -41,26 +41,29 @@ const localizeFormula = (formula: string, locale: Locale) => {
     .replaceAll('动爻', 'Moving line');
 };
 
+const displayDeterministic = (locale: Locale, value: string, category: string) =>
+  displayRequired(locale, value, category);
+
 function withDeterministicSummaries(divinationData: DivinationData, locale: Locale) {
   const relationSummary = locale === 'en'
     ? RELATION_SUMMARY_EN[divinationData.relation.relation]
     : RELATION_SUMMARY[divinationData.relation.relation];
   const relation = {
     ...divinationData.relation,
-    bodyElement: display(locale, divinationData.relation.bodyElement),
-    useElement: display(locale, divinationData.relation.useElement),
-    relation: display(locale, divinationData.relation.relation),
-    status: display(locale, divinationData.relation.status),
+    bodyElement: displayDeterministic(locale, divinationData.relation.bodyElement, 'element'),
+    useElement: displayDeterministic(locale, divinationData.relation.useElement, 'element'),
+    relation: displayDeterministic(locale, divinationData.relation.relation, 'relation'),
+    status: displayDeterministic(locale, divinationData.relation.status, 'status'),
     summary: relationSummary,
   };
   const seasonal = {
     ...divinationData.seasonal,
-    seasonName: display(locale, divinationData.seasonal.seasonName),
-    seasonElement: display(locale, divinationData.seasonal.seasonElement),
-    bodyElement: display(locale, divinationData.seasonal.bodyElement),
-    strength: display(locale, divinationData.seasonal.strength),
+    seasonName: displayDeterministic(locale, divinationData.seasonal.seasonName, 'season'),
+    seasonElement: displayDeterministic(locale, divinationData.seasonal.seasonElement, 'element'),
+    bodyElement: displayDeterministic(locale, divinationData.seasonal.bodyElement, 'element'),
+    strength: displayDeterministic(locale, divinationData.seasonal.strength, 'strength'),
     summary: locale === 'en'
-      ? `The body trigram belongs to ${display(locale, divinationData.seasonal.bodyElement)}. The season is ${display(locale, divinationData.seasonal.seasonName)}, and the body force is ${display(locale, divinationData.seasonal.strength)}. Season is secondary context and does not override the body/use relation.`
+      ? `The body trigram belongs to ${displayDeterministic(locale, divinationData.seasonal.bodyElement, 'element')}. The season is ${displayDeterministic(locale, divinationData.seasonal.seasonName, 'season')}, and the body force is ${displayDeterministic(locale, divinationData.seasonal.strength, 'strength')}. Season is secondary context and does not override the body/use relation.`
       : `体卦属${divinationData.seasonal.bodyElement}，时令为${divinationData.seasonal.seasonName}，体气为${divinationData.seasonal.strength}。时令只作辅助，不覆盖体用生克主断。`,
   };
 
@@ -81,36 +84,36 @@ function withDeterministicSummaries(divinationData: DivinationData, locale: Loca
     mainHexName: divinationData.mainHex.name,
     mutualHexName: divinationData.mutualHex.name,
     changedHexName: divinationData.changedHex.name,
-    mainHexDisplayName: display(locale, divinationData.mainHex.name),
-    mutualHexDisplayName: display(locale, divinationData.mutualHex.name),
-    changedHexDisplayName: display(locale, divinationData.changedHex.name),
+    mainHexDisplayName: displayDeterministic(locale, divinationData.mainHex.name, 'hexagram'),
+    mutualHexDisplayName: displayDeterministic(locale, divinationData.mutualHex.name, 'hexagram'),
+    changedHexDisplayName: displayDeterministic(locale, divinationData.changedHex.name, 'hexagram'),
     mainHex: {
       ...divinationData.mainHex,
-      name: display(locale, divinationData.mainHex.name),
-      upperName: display(locale, divinationData.mainHex.upperName),
-      lowerName: display(locale, divinationData.mainHex.lowerName),
+      name: displayDeterministic(locale, divinationData.mainHex.name, 'hexagram'),
+      upperName: displayDeterministic(locale, divinationData.mainHex.upperName, 'trigram'),
+      lowerName: displayDeterministic(locale, divinationData.mainHex.lowerName, 'trigram'),
     },
     mutualHex: {
       ...divinationData.mutualHex,
-      name: display(locale, divinationData.mutualHex.name),
-      upperName: display(locale, divinationData.mutualHex.upperName),
-      lowerName: display(locale, divinationData.mutualHex.lowerName),
+      name: displayDeterministic(locale, divinationData.mutualHex.name, 'hexagram'),
+      upperName: displayDeterministic(locale, divinationData.mutualHex.upperName, 'trigram'),
+      lowerName: displayDeterministic(locale, divinationData.mutualHex.lowerName, 'trigram'),
     },
     changedHex: {
       ...divinationData.changedHex,
-      name: display(locale, divinationData.changedHex.name),
-      upperName: display(locale, divinationData.changedHex.upperName),
-      lowerName: display(locale, divinationData.changedHex.lowerName),
+      name: displayDeterministic(locale, divinationData.changedHex.name, 'hexagram'),
+      upperName: displayDeterministic(locale, divinationData.changedHex.upperName, 'trigram'),
+      lowerName: displayDeterministic(locale, divinationData.changedHex.lowerName, 'trigram'),
     },
     body: {
       ...divinationData.body,
-      name: display(locale, divinationData.body.name),
-      element: display(locale, divinationData.body.element),
+      name: displayDeterministic(locale, divinationData.body.name, 'trigram'),
+      element: displayDeterministic(locale, divinationData.body.element, 'element'),
     },
     use: {
       ...divinationData.use,
-      name: display(locale, divinationData.use.name),
-      element: display(locale, divinationData.use.element),
+      name: displayDeterministic(locale, divinationData.use.name, 'trigram'),
+      element: displayDeterministic(locale, divinationData.use.element, 'element'),
     },
     relation,
     seasonal,
@@ -205,6 +208,36 @@ const asText = (value: unknown, fallback: string) =>
 const asObject = (value: unknown) =>
   value && typeof value === 'object' ? value as Record<string, unknown> : {};
 
+const CJK_PATTERN = /[\u4e00-\u9fff]/;
+
+const assertEnglishAiText = (value: unknown, path: string) => {
+  if (typeof value === 'string' && CJK_PATTERN.test(value)) {
+    throw new Error(`English AI payload contains Chinese at ${path}`);
+  }
+};
+
+const validateEnglishAiPayload = (
+  aiPayload: Record<string, unknown>,
+  aiMainHex: Record<string, unknown>,
+  aiMutualHex: Record<string, unknown>,
+  aiChangedHex: Record<string, unknown>,
+) => {
+  assertEnglishAiText(aiPayload.timeAnalysis, 'timeAnalysis');
+  assertEnglishAiText(aiMainHex.name, 'mainHex.name');
+  assertEnglishAiText(aiMainHex.meaning, 'mainHex.meaning');
+  assertEnglishAiText(aiMutualHex.name, 'mutualHex.name');
+  assertEnglishAiText(aiMutualHex.meaning, 'mutualHex.meaning');
+  assertEnglishAiText(aiChangedHex.name, 'changedHex.name');
+  assertEnglishAiText(aiChangedHex.meaning, 'changedHex.meaning');
+  assertEnglishAiText(aiPayload.bodyUseAnalysis, 'bodyUseAnalysis');
+  assertEnglishAiText(aiPayload.fiveElementAnalysis, 'fiveElementAnalysis');
+  assertEnglishAiText(aiPayload.seasonalAnalysis, 'seasonalAnalysis');
+  assertEnglishAiText(aiPayload.omenAnalysis, 'omenAnalysis');
+  assertEnglishAiText(aiPayload.meaning, 'meaning');
+  assertEnglishAiText(aiPayload.advice, 'advice');
+  assertEnglishAiText(aiPayload.overallStatus, 'overallStatus');
+};
+
 export function buildDivinationResponse(
   divinationDataInput: DivinationData,
   aiPayloadInput: unknown = {},
@@ -215,6 +248,9 @@ export function buildDivinationResponse(
   const aiMainHex = asObject(aiPayload.mainHex);
   const aiMutualHex = asObject(aiPayload.mutualHex);
   const aiChangedHex = asObject(aiPayload.changedHex);
+  if (locale === 'en') {
+    validateEnglishAiPayload(aiPayload, aiMainHex, aiMutualHex, aiChangedHex);
+  }
   const {
     castMethodLabel,
     timeInfo,
