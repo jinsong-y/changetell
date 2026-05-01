@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import {
   buildDivinationResponse,
   buildSystemPrompt,
-  DEFAULT_GEMINI_MODEL,
+  FALLBACK_GEMINI_MODEL,
   getCastRequestValidationError,
-  getGeminiModelName,
+  getGeminiModelPlan,
   getServiceErrorMessage,
   isGeminiHighDemandError,
   normalizeLocale,
-  withGeminiHighDemandRetry,
+  PRIMARY_GEMINI_MODEL,
+  withGeminiHighDemandFallback,
 } from '../../api/chat';
 import { displayRequired } from '../../api/locale';
 import { castMeihua } from './meihua';
@@ -127,20 +128,41 @@ assert.equal(
 assert.equal(isGeminiHighDemandError({ status: 503 }), true);
 assert.equal(isGeminiHighDemandError(new Error('503 Service Unavailable: high demand')), true);
 assert.equal(isGeminiHighDemandError({ status: 429 }), false);
-assert.equal(DEFAULT_GEMINI_MODEL, 'gemini-2.5-flash-lite');
-assert.equal(getGeminiModelName(), 'gemini-2.5-flash-lite');
-assert.equal(getGeminiModelName(' gemini-custom-model '), 'gemini-custom-model');
+assert.equal(PRIMARY_GEMINI_MODEL, 'gemini-3.1-flash-lite-preview');
+assert.equal(FALLBACK_GEMINI_MODEL, 'gemini-2.5-flash-lite');
+assert.deepEqual(getGeminiModelPlan(), ['gemini-3.1-flash-lite-preview', 'gemini-2.5-flash-lite']);
+assert.deepEqual(getGeminiModelPlan(' gemini-custom-model '), ['gemini-custom-model']);
 
 let retryAttempts = 0;
-const retryResult = await withGeminiHighDemandRetry(async () => {
+const retryResult = await withGeminiHighDemandFallback(async (modelName) => {
   retryAttempts += 1;
   if (retryAttempts === 1) {
     throw Object.assign(new Error('temporary high demand'), { status: 503 });
   }
-  return 'ok';
+  return modelName;
 });
-assert.equal(retryResult, 'ok');
+assert.equal(retryResult, 'gemini-2.5-flash-lite');
 assert.equal(retryAttempts, 2);
+
+let failFastAttempts = 0;
+await assert.rejects(
+  () => withGeminiHighDemandFallback(async () => {
+    failFastAttempts += 1;
+    throw Object.assign(new Error('invalid api key'), { status: 401 });
+  }),
+  /invalid api key/,
+);
+assert.equal(failFastAttempts, 1);
+
+let explicitModelAttempts = 0;
+await assert.rejects(
+  () => withGeminiHighDemandFallback(async () => {
+    explicitModelAttempts += 1;
+    throw Object.assign(new Error('configured model high demand'), { status: 503 });
+  }, getGeminiModelPlan('gemini-custom-model')),
+  /configured model high demand/,
+);
+assert.equal(explicitModelAttempts, 1);
 
 const englishCast = castMeihua('2026-04-28T13:34:52+08:00');
 const englishResponse = buildDivinationResponse(englishCast, {}, 'en');

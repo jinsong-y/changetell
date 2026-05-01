@@ -25,10 +25,13 @@ type DivinationData = ReturnType<typeof castMeihua>;
 const isCastMethod = (value: unknown): value is CastMethod =>
   value === 'time' || value === 'numbers';
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
+export const PRIMARY_GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
+export const FALLBACK_GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
-export const getGeminiModelName = (modelName = process.env.GEMINI_MODEL) =>
-  modelName?.trim() || DEFAULT_GEMINI_MODEL;
+export const getGeminiModelPlan = (modelName = process.env.GEMINI_MODEL) => {
+  const configuredModel = modelName?.trim();
+  return configuredModel ? [configuredModel] : [PRIMARY_GEMINI_MODEL, FALLBACK_GEMINI_MODEL];
+};
 
 export const getServiceErrorMessage = (locale: Locale) =>
   locale === 'en'
@@ -142,21 +145,22 @@ export const isGeminiHighDemandError = (error: unknown) => {
     || (message.includes('503') && message.includes('high demand'));
 };
 
-export async function withGeminiHighDemandRetry<T>(
-  operation: () => Promise<T>,
-  maxRetries = 1,
+export async function withGeminiHighDemandFallback<T>(
+  operation: (modelName: string) => Promise<T>,
+  modelNames = getGeminiModelPlan(),
 ): Promise<T> {
-  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+  for (let index = 0; index < modelNames.length; index += 1) {
+    const modelName = modelNames[index];
     try {
-      return await operation();
+      return await operation(modelName);
     } catch (error) {
-      if (attempt >= maxRetries || !isGeminiHighDemandError(error)) {
+      if (index >= modelNames.length - 1 || !isGeminiHighDemandError(error)) {
         throw error;
       }
     }
   }
 
-  throw new Error('Gemini retry exhausted');
+  throw new Error('Gemini model plan is empty');
 }
 
 function castByRequest(input: {
@@ -480,13 +484,13 @@ export default async function handler(req: any, res: any) {
     const rawDivinationData = castByRequest({ castMethod, castPayload, timestamp });
     const systemPrompt = buildSystemPrompt(rawDivinationData, locale);
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
-    const model = genAI.getGenerativeModel({
-      model: getGeminiModelName(),
-      generationConfig: { responseMimeType: "application/json" },
-    });
 
     try {
-      const text = await withGeminiHighDemandRetry(async () => {
+      const text = await withGeminiHighDemandFallback(async (modelName) => {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { responseMimeType: "application/json" },
+        });
         const userPrompt = locale === 'en' ? `User question: ${prompt}` : `用户求问：${prompt}`;
         const result = await model.generateContent([systemPrompt, userPrompt]);
         const response = await result.response;
