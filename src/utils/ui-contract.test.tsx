@@ -13,7 +13,7 @@ import InputView, {
   type InputViewProps,
 } from '../components/InputView';
 import Header from '../components/Header';
-import LoadingView, { LOADING_SEQUENCE_KEYS } from '../components/LoadingView';
+import LoadingView, { getLoadingSequenceStep, LOADING_SEQUENCE_KEYS } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
 import { I18nProvider, readInitialLocale } from '../i18n/I18nProvider';
 import { formatTranslation, getTranslation, getTranslationKeys, translate, translations } from '../i18n/translations';
@@ -173,6 +173,11 @@ continueTimeContract?.('当前问题', getCastTimestamp(date));
 
 assert.ok(LOADING_SEQUENCE_KEYS.includes('loading.step.4'));
 assert.ok(!LOADING_SEQUENCE_KEYS.some((step) => step.includes('爻辞')));
+assert.deepEqual(
+  LOADING_SEQUENCE_KEYS.map((_, index) => getLoadingSequenceStep(index)),
+  [...LOADING_SEQUENCE_KEYS],
+);
+assert.equal(getLoadingSequenceStep(LOADING_SEQUENCE_KEYS.length), null);
 
 const cast = castMeihua('2020-05-23T12:00:00+08:00');
 const relationSummary = {

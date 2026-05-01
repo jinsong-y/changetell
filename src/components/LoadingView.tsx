@@ -10,19 +10,26 @@ export const LOADING_SEQUENCE_KEYS = [
   'loading.step.5',
 ] as const;
 
+export type LoadingSequenceKey = (typeof LOADING_SEQUENCE_KEYS)[number];
+
+export const getLoadingSequenceStep = (index: number): LoadingSequenceKey | null =>
+  LOADING_SEQUENCE_KEYS[index] ?? null;
+
 export default function LoadingView() {
   const { t } = useI18n();
-  const [steps, setSteps] = useState<(typeof LOADING_SEQUENCE_KEYS)[number][]>([]);
+  const [steps, setSteps] = useState<LoadingSequenceKey[]>([]);
   
   useEffect(() => {
     let currentStep = 0;
     const interval = setInterval(() => {
-      if (currentStep < LOADING_SEQUENCE_KEYS.length) {
-        setSteps(prev => [...prev, LOADING_SEQUENCE_KEYS[currentStep]]);
-        currentStep++;
-      } else {
+      const step = getLoadingSequenceStep(currentStep);
+      if (!step) {
         clearInterval(interval);
+        return;
       }
+
+      setSteps(prev => [...prev, step]);
+      currentStep++;
     }, 500); 
     
     return () => clearInterval(interval);
