@@ -356,7 +356,7 @@ export default function InputView({
                     }
                   }}
                   autoFocus
-                  placeholder={t('input.prompt.placeholder')} 
+                  placeholder={t('input.prompt.placeholder')}
                   className="bg-transparent border-none outline-none text-[#c0caf5] w-full text-base placeholder-[#565f89] focus:ring-0" 
                 />
                 <motion.span 
