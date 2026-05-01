@@ -125,7 +125,7 @@ const SectionLabel = ({ step, title, tone }: { step: string; title: string; tone
 );
 
 export default function ResultView({ data, onRestart }: { data: DivinationResult, onRestart: () => void }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   if (!data) return null;
 
@@ -148,6 +148,7 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
   const seasonLabel = data.seasonal.season ?? data.seasonal.seasonName ?? t('result.season.label');
   const castMethodLabel = data.castMethodLabel ?? t('input.method.time');
   const stabilityNote = data.stabilityNote ?? (data.castMethod === 'numbers' ? '' : t('result.stability.timeRepeatNote'));
+  const labelSeparator = locale === 'en' ? ': ' : '：';
 
   return (
     <motion.div 
@@ -165,12 +166,12 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
         </div>
         <div className="text-xs font-medium text-[#c0caf5] flex items-start gap-2 opacity-80 mt-1 min-w-0">
           <span className="w-4 text-center shrink-0">·</span>
-          <span className="min-w-0 break-words">{castMethodLabel}：{data.timeAnalysis}</span>
+          <span className="min-w-0 break-words">{castMethodLabel}{labelSeparator}{data.timeAnalysis}</span>
         </div>
         {data.formula && (
           <div className="text-xs font-medium text-[#565f89] flex items-start gap-2 opacity-80 min-w-0">
             <span className="w-4 text-center shrink-0">·</span>
-            <span className="min-w-0 break-words">{t('result.status.formula')}：{data.formula}</span>
+            <span className="min-w-0 break-words">{t('result.status.formula')}{labelSeparator}{data.formula}</span>
           </div>
         )}
         {data.movingLine && (

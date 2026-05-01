@@ -11,6 +11,7 @@ import InputView, {
   normalizePromptForRepeat,
   type InputViewProps,
 } from '../components/InputView';
+import Header from '../components/Header';
 import LoadingView, { LOADING_SEQUENCE_KEYS } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
 import { I18nProvider } from '../i18n/I18nProvider';
@@ -33,6 +34,7 @@ const zhKeys = getTranslationKeys('zh-CN');
 const enKeys = getTranslationKeys('en');
 assert.deepEqual(enKeys, zhKeys);
 assert.equal(getTranslation('zh-CN', 'header.language.zh'), '中文');
+assert.equal(getTranslation('en', 'header.language.zh'), 'Chinese');
 assert.equal(getTranslation('en', 'header.language.en'), 'EN');
 assert.throws(() => translate('en', 'result.status.movingLine'), /Missing interpolation value line/);
 assert.equal(formatTranslation('en', 'result.status.movingLine', { line: 3 }), 'Moving Line: Line 3');
@@ -227,6 +229,10 @@ for (const text of ['起卦', '报数起卦', '输入求问之事']) {
 }
 assertNoChinese(englishInputHtml, 'English input HTML');
 
+const englishHeaderHtml = renderWithLocale('en', <Header onViewChange={() => {}} />);
+assert.ok(englishHeaderHtml.includes('Chinese'));
+assertNoChinese(englishHeaderHtml, 'English header HTML');
+
 const englishLoadingHtml = renderWithLocale('en', <LoadingView />);
 assert.ok(englishLoadingHtml.includes('Casting'));
 assert.ok(!englishLoadingHtml.includes('正在起卦'));
@@ -268,6 +274,7 @@ for (const text of ['排出三卦', '体卦', '五行生克论吉凶', '再起�
   assert.ok(!englishResultHtml.includes(text), `English result leaked Chinese text: ${text}`);
 }
 assertNoChinese(englishResultHtml, 'English result HTML');
+assert.ok(!englishResultHtml.includes('：'), 'English result used full-width colon punctuation');
 
 assert.throws(
   () => renderWithLocale(

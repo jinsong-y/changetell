@@ -35,6 +35,26 @@ assert.equal(
   'Prompt is required',
 );
 assert.equal(
+  getCastRequestValidationError({ prompt: '', locale: 'zh-CN', castMethod: 'time' }),
+  '请填写求问之事',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: '问事', locale: 'zh-CN' }),
+  '请选择起卦方式',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: 'Question', locale: 'en' }),
+  'Cast method is required',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: '问事', locale: 'zh-CN', castMethod: 'bogus' }),
+  '不支持的起卦方式',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: 'Question', locale: 'en', castMethod: 'bogus' }),
+  'Unsupported cast method',
+);
+assert.equal(
   getCastRequestValidationError({
     prompt: 'Question',
     locale: 'en',

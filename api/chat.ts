@@ -22,6 +22,9 @@ const RELATION_SUMMARY_EN: Record<string, string> = {
 
 type DivinationData = ReturnType<typeof castMeihua>;
 
+const isCastMethod = (value: unknown): value is CastMethod =>
+  value === 'time' || value === 'numbers';
+
 export const getServiceErrorMessage = (locale: Locale) =>
   locale === 'en'
     ? 'The interpretation service is temporarily unavailable. Please try again later.'
@@ -152,7 +155,7 @@ export async function withGeminiHighDemandRetry<T>(
 }
 
 function castByRequest(input: {
-  castMethod?: CastMethod;
+  castMethod: CastMethod;
   castPayload?: { numbers?: number[] };
   timestamp?: string;
 }): DivinationData {
@@ -163,7 +166,12 @@ function castByRequest(input: {
     });
   }
 
-  return castMeihua(input.timestamp);
+  if (input.castMethod === 'time') {
+    return castMeihua(input.timestamp);
+  }
+
+  const exhaustive: never = input.castMethod;
+  throw new Error(`Unsupported cast method: ${exhaustive}`);
 }
 
 const isValidNumberCastValue = (value: unknown) =>
@@ -178,7 +186,15 @@ export function getCastRequestValidationError(input: {
   const locale = normalizeLocale(input.locale);
   if (!input.locale) return 'Locale is required';
   if (!locale) return 'Unsupported locale';
-  if (!input.prompt) return 'Prompt is required';
+  if (typeof input.prompt !== 'string' || !input.prompt.trim()) {
+    return locale === 'en' ? 'Prompt is required' : '请填写求问之事';
+  }
+  if (!input.castMethod) {
+    return locale === 'en' ? 'Cast method is required' : '请选择起卦方式';
+  }
+  if (!isCastMethod(input.castMethod)) {
+    return locale === 'en' ? 'Unsupported cast method' : '不支持的起卦方式';
+  }
 
   if (input.castMethod === 'numbers') {
     const numbers = input.castPayload?.numbers;

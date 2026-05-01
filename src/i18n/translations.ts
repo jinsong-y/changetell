@@ -71,7 +71,7 @@ export const translations = {
     'result.restart': '再起一卦',
   },
   en: {
-    'header.language.zh': '中文',
+    'header.language.zh': 'Chinese',
     'header.language.en': 'EN',
     'app.error.badResponse': 'The service returned an invalid response. Please try again later.',
     'app.error.serviceUnavailable': 'The service is temporarily unavailable. Please try again later.',
