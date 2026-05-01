@@ -26,6 +26,16 @@ const enKeys = getTranslationKeys('en');
 assert.deepEqual(enKeys, zhKeys);
 assert.equal(getTranslation('zh-CN', 'header.language.zh'), '中文');
 assert.equal(getTranslation('en', 'header.language.en'), 'EN');
+assert.equal(getTranslation('zh-CN', 'input.repeat.warning'), '同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。');
+assert.equal(
+  getTranslation('en', 'input.repeat.warning'),
+  'The same question should not be cast again within the same two-hour period. If your intent has changed, use Number Cast.',
+);
+assert.equal(getTranslation('zh-CN', 'result.stability.timeRepeatNote'), '本卦由农历年月日时推得，同一时辰内相同问题不宜重复起卦。');
+assert.equal(
+  getTranslation('en', 'result.stability.timeRepeatNote'),
+  'This hexagram is derived from the lunar year, month, day, and hour. Avoid repeating the same question within the same two-hour period.',
+);
 assert.throws(
   () => getTranslation('en', 'missing.translation.key' as keyof typeof translations.en),
   /Missing translation/,

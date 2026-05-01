@@ -15,6 +15,7 @@ export const translations = {
     'input.intro.warningLine2': '同一时辰内，不要反复起卦。',
     'input.repeat.useNumbers': '改用报数起卦',
     'input.repeat.continueTime': '仍用时辰起卦',
+    'input.repeat.warning': '同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。',
     'input.method.time': '时间起卦',
     'input.method.numbers': '报数起卦',
     'input.numbers.guidance': '静心后，随心写下 2 到 3 个整数。不必计算，不必选吉数。范围 1-999。',
@@ -66,6 +67,7 @@ export const translations = {
     'result.omen.unused': '未取外应',
     'result.advice.title': '【核心建议】',
     'result.overallStatus': '总体状态: {status}',
+    'result.stability.timeRepeatNote': '本卦由农历年月日时推得，同一时辰内相同问题不宜重复起卦。',
     'result.restart': '再起一卦',
   },
   en: {
@@ -82,6 +84,7 @@ export const translations = {
     'input.intro.warningLine2': 'Avoid repeating the same question within the same two-hour period.',
     'input.repeat.useNumbers': 'Use Number Cast',
     'input.repeat.continueTime': 'Continue Time Cast',
+    'input.repeat.warning': 'The same question should not be cast again within the same two-hour period. If your intent has changed, use Number Cast.',
     'input.method.time': 'Time Cast',
     'input.method.numbers': 'Number Cast',
     'input.numbers.guidance': 'After settling your mind, enter 2 to 3 whole numbers. Do not calculate or choose lucky numbers. Range: 1-999.',
@@ -133,6 +136,7 @@ export const translations = {
     'result.omen.unused': 'No Omen Taken',
     'result.advice.title': 'Core Advice',
     'result.overallStatus': 'Overall Status: {status}',
+    'result.stability.timeRepeatNote': 'This hexagram is derived from the lunar year, month, day, and hour. Avoid repeating the same question within the same two-hour period.',
     'result.restart': 'Cast Again',
   },
 } as const;
