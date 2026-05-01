@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { displayRequired } from '../../api/locale';
+import { useI18n } from '../i18n/useI18n';
+import type { Locale } from '../i18n/types';
 import { HEXAGRAMS_TABLE, TRIGRAMS, type TrigramName } from '../utils/iching';
 
 const getTrigramByCode = (code: string): TrigramName => {
@@ -69,6 +72,29 @@ const NUMBER_CAST_MAX = 999;
 const REQUIRED_NUMBER_ERROR = '上卦数和下卦数需填写 1 到 999 的整数';
 const MOVING_NUMBER_ERROR = '动爻数如填写，也需是 1 到 999 的整数';
 
+const TRIGRAM_DISPLAY_NAMES: Record<Locale, Record<TrigramName, string>> = {
+  'zh-CN': {
+    天: '天',
+    泽: '泽',
+    火: '火',
+    雷: '雷',
+    风: '风',
+    水: '水',
+    山: '山',
+    地: '地',
+  },
+  en: {
+    天: 'Heaven',
+    泽: 'Lake',
+    火: 'Fire',
+    雷: 'Thunder',
+    风: 'Wind',
+    水: 'Water',
+    山: 'Mountain',
+    地: 'Earth',
+  },
+};
+
 const parseNumberInput = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -124,6 +150,7 @@ export default function InputView({
   forceNumbersMode,
   initialCastMethod = 'time',
 }: InputViewProps) {
+  const { locale, t } = useI18n();
   const [inputVal, setInputVal] = useState('');
   const [castMethod, setCastMethod] = useState<CastMethod>(initialCastMethod);
   const [numberInputs, setNumberInputs] = useState(['', '', '']);
@@ -149,6 +176,15 @@ export default function InputView({
   const { upperTri, lowerTri, name: hexName } = getVisualHexagram(visualLines);
   const numberCastPayload = getNumberCastPayload(numberInputs);
   const canCast = Boolean(inputVal.trim()) && (castMethod === 'time' || numberCastPayload.canCast);
+  const numberError =
+    numberCastPayload.error === REQUIRED_NUMBER_ERROR
+      ? t('input.numbers.requiredError')
+      : numberCastPayload.error === MOVING_NUMBER_ERROR
+        ? t('input.numbers.movingError')
+        : numberCastPayload.error;
+  const displayUpperTri = TRIGRAM_DISPLAY_NAMES[locale][upperTri];
+  const displayLowerTri = TRIGRAM_DISPLAY_NAMES[locale][lowerTri];
+  const displayHexName = displayRequired(locale, hexName, 'hexagram');
 
   const handleCastClick = () => {
     if (canCast) {
@@ -189,8 +225,8 @@ export default function InputView({
         <motion.div variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-tr from-[#7aa2f7]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
           <div className="bg-[#24283b] border-b border-[#414868] p-2 flex justify-between items-center z-10">
-          <span className="font-bold text-[#7aa2f7] text-xl tracking-wider">起卦</span>
-          <span className="text-[#565f89] font-medium text-xs tracking-widest text-right">诚心正意</span>
+          <span className="font-bold text-[#7aa2f7] text-xl tracking-wider">{t('input.panel.title')}</span>
+          <span className="text-[#565f89] font-medium text-xs tracking-widest text-right">{t('input.panel.subtitle')}</span>
         </div>
         <div className="p-4 flex flex-col gap-4 min-h-[150px] z-10">
           <motion.div 
@@ -199,7 +235,7 @@ export default function InputView({
             transition={{ delay: 0.3, duration: 1 }} 
             className="text-[#73daca] text-base font-medium"
           >
-            优先以当前时辰起卦。凡占卜者，必诚心正意。
+            {t('input.intro.primary')}
           </motion.div>
           <motion.div 
             initial={{ opacity: 0 }} 
@@ -207,7 +243,7 @@ export default function InputView({
             transition={{ delay: 0.8, duration: 1 }} 
             className="text-[#73daca] text-base"
           >
-            请在此默念所求之事...
+            {t('input.intro.prompt')}
           </motion.div>
           <motion.div 
             initial={{ opacity: 0 }} 
@@ -215,8 +251,8 @@ export default function InputView({
             transition={{ delay: 1.3, duration: 1 }} 
             className="text-[#7aa2f7]/60 text-xs leading-relaxed"
           >
-            “初筮告，再三渎，渎则不告。”<br/>
-            同一时辰内，不要反复起卦。
+            {t('input.intro.warningLine1')}<br/>
+            {t('input.intro.warningLine2')}
           </motion.div>
 
             {repeatWarning && (
@@ -228,7 +264,7 @@ export default function InputView({
                     onClick={onUseNumbers}
                     className="border border-[#73daca] bg-[#73daca]/10 px-3 py-2 text-xs font-bold tracking-widest text-[#73daca]"
                   >
-                    改用报数起卦
+                    {t('input.repeat.useNumbers')}
                   </button>
                   <button
                     type="button"
@@ -238,7 +274,7 @@ export default function InputView({
                     }}
                     className="border border-[#414868] bg-[#1a1b26] px-3 py-2 text-xs font-bold tracking-widest text-[#8a98c9]"
                   >
-                    仍用时辰起卦
+                    {t('input.repeat.continueTime')}
                   </button>
                 </div>
               </div>
@@ -246,8 +282,8 @@ export default function InputView({
 
             <div className="grid grid-cols-2 gap-2">
               {[
-                { key: 'time', label: '时间起卦' },
-                { key: 'numbers', label: '报数起卦' },
+                { key: 'time', label: t('input.method.time') },
+                { key: 'numbers', label: t('input.method.numbers') },
               ].map((method) => (
                 <button
                   key={method.key}
@@ -267,17 +303,17 @@ export default function InputView({
             {castMethod === 'numbers' && (
               <div className="flex flex-col gap-3">
                 <p className="text-xs text-[#8a98c9] leading-relaxed">
-                  静心后，随心写下 2 到 3 个整数。不必计算，不必选吉数。范围 1-999。
+                  {t('input.numbers.guidance')}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
-                    { label: '上卦数', hint: '随心第一个整数', required: true },
-                    { label: '下卦数', hint: '随心第二个整数', required: true },
-                    { label: '动爻数', hint: '可选，不填则以前两数相加定动爻', required: false },
+                    { label: t('input.numbers.upper'), hint: t('input.numbers.upperHint'), required: true },
+                    { label: t('input.numbers.lower'), hint: t('input.numbers.lowerHint'), required: true },
+                    { label: t('input.numbers.moving'), hint: t('input.numbers.movingHint'), required: false },
                   ].map((field, index) => (
                     <label key={field.label} className="border border-[#414868] bg-[#24283b] p-2 flex flex-col gap-1 focus-within:border-[#bb9af7] transition-colors">
                       <span className="text-[10px] text-[#565f89] tracking-widest">
-                        {field.label}{field.required ? ' · 必填' : ' · 可选'}
+                        {field.label} · {field.required ? t('input.numbers.required') : t('input.numbers.optional')}
                       </span>
                       <input
                         type="text"
@@ -297,7 +333,7 @@ export default function InputView({
                   ))}
                 </div>
                 {numberCastPayload.error && (
-                  <p className="text-xs text-[#f7768e] leading-relaxed">{numberCastPayload.error}</p>
+                  <p className="text-xs text-[#f7768e] leading-relaxed">{numberError}</p>
                 )}
               </div>
             )}
@@ -320,7 +356,7 @@ export default function InputView({
                     }
                   }}
                   autoFocus
-                  placeholder="输入求问之事..." 
+                  placeholder={t('input.prompt.placeholder')}
                   className="bg-transparent border-none outline-none text-[#c0caf5] w-full text-base placeholder-[#565f89] focus:ring-0" 
                 />
                 <motion.span 
@@ -337,7 +373,7 @@ export default function InputView({
       <motion.div variants={itemVariants} className="border border-[#414868] bg-[#1a1b26] flex flex-col relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#bb9af7]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
         <div className="bg-[#24283b] border-b border-[#414868] p-2 flex justify-between items-center z-10">
-          <span className="font-bold text-[#bb9af7] text-xs tracking-wider">念起卦生</span>
+          <span className="font-bold text-[#bb9af7] text-xs tracking-wider">{t('input.matrix.title')}</span>
         </div>
         <div className="p-6 flex flex-col items-center justify-center gap-6 min-h-[200px] z-10">
           <AnimatePresence mode="popLayout">
@@ -375,9 +411,11 @@ export default function InputView({
               className="text-center w-full border-t border-[#414868] pt-4 mb-2"
             >
               <h2 className="text-2xl font-bold text-[#c0caf5] tracking-widest drop-shadow-sm">
-                <span>{hexName}</span>
+                <span>{displayHexName}</span>
               </h2>
-              <p className="text-xs font-medium text-[#565f89] mt-2 tracking-widest">{upperTri}上 // {lowerTri}下</p>
+              <p className="text-xs font-medium text-[#565f89] mt-2 tracking-widest">
+                {t('input.matrix.upperLower', { upper: displayUpperTri, lower: displayLowerTri })}
+              </p>
             </motion.div>
           </AnimatePresence>
 
@@ -389,7 +427,7 @@ export default function InputView({
             disabled={!canCast}
             className="pulse-effect disabled:opacity-50 disabled:[animation:none] disabled:border-[#565f89] disabled:text-[#565f89] disabled:cursor-not-allowed border border-[#73daca] bg-[#1a1b26] text-[#73daca] text-xl font-bold py-4 px-12 tracking-widest uppercase transition-colors duration-300"
           >
-            掷爻
+            {t('input.castButton')}
           </motion.button>
         </div>
       </motion.div>

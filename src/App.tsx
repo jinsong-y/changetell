@@ -6,12 +6,14 @@ import InputView, {
   type CastOptions,
   type TimeCastRecord,
 } from './components/InputView';
-import ResultView from './components/ResultView';
+import ResultView, { type DivinationResult } from './components/ResultView';
 import LoadingView from './components/LoadingView';
+import { useI18n } from './i18n/useI18n';
 
 export default function App() {
+  const { locale, t } = useI18n();
   const [view, setView] = useState<'input' | 'loading' | 'result'>('input');
-  const [resultData, setResultData] = useState<any>(null);
+  const [resultData, setResultData] = useState<DivinationResult | null>(null);
   const [error, setError] = useState('');
   const [timeCastRecords, setTimeCastRecords] = useState<TimeCastRecord[]>([]);
   const [repeatWarning, setRepeatWarning] = useState('');
@@ -28,6 +30,7 @@ export default function App() {
         body: JSON.stringify({
           prompt,
           timestamp,
+          locale,
           castMethod: options?.method ?? 'time',
           castPayload: {
             numbers: options?.numbers,
@@ -40,11 +43,11 @@ export default function App() {
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        throw new Error(response.ok ? '服务返回格式异常，请稍后再试' : text || '服务暂时不可用，请稍后再试');
+        throw new Error(response.ok ? t('app.error.badResponse') : text || t('app.error.serviceUnavailable'));
       }
 
       if (data.error) throw new Error(data.error);
-      if (!response.ok) throw new Error('服务暂时不可用，请稍后再试');
+      if (!response.ok) throw new Error(t('app.error.serviceUnavailable'));
       
       setResultData(data);
       if ((options?.method ?? 'time') === 'time') {
@@ -54,7 +57,7 @@ export default function App() {
       setView('result');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || '获取解析失败，请重试');
+      setError(err.message || t('app.error.castFailed'));
       setView('input');
     }
   };
@@ -63,7 +66,7 @@ export default function App() {
     setForceNumbersMode(false);
 
     if ((options?.method ?? 'time') === 'time' && isRepeatTimeCast(timeCastRecords, prompt, new Date(timestamp))) {
-      setRepeatWarning('同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。');
+      setRepeatWarning(t('input.repeat.warning'));
       return;
     }
 

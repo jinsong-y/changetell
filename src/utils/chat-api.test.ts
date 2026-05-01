@@ -1,17 +1,72 @@
 import assert from 'node:assert/strict';
 import {
-  AI_BUSY_NOTICE,
-  buildLocalFallbackResponse,
+  buildDivinationResponse,
+  buildSystemPrompt,
   getCastRequestValidationError,
+  getServiceErrorMessage,
   isGeminiHighDemandError,
+  normalizeLocale,
   withGeminiHighDemandRetry,
 } from '../../api/chat';
+import { displayRequired } from '../../api/locale';
 import { castMeihua } from './meihua';
 
-assert.equal(getCastRequestValidationError({ prompt: '问事', castMethod: 'time' }), null);
+const assertNoChineseText = (value: string, label: string) => {
+  assert.ok(!/\p{Script=Han}/u.test(value), `${label} contains Chinese characters`);
+};
+
+assert.equal(normalizeLocale('zh-CN'), 'zh-CN');
+assert.equal(normalizeLocale('en'), 'en');
+assert.equal(normalizeLocale(undefined), null);
+assert.equal(normalizeLocale('fr'), null);
+
+assert.equal(
+  getCastRequestValidationError({ prompt: '问事', castMethod: 'time' }),
+  'Locale is required',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: '问事', locale: 'fr', castMethod: 'time' }),
+  'Unsupported locale',
+);
+assert.equal(getCastRequestValidationError({ prompt: '问事', locale: 'zh-CN', castMethod: 'time' }), null);
+assert.equal(getCastRequestValidationError({ prompt: 'Question', locale: 'en', castMethod: 'time' }), null);
+assert.equal(
+  getCastRequestValidationError({ prompt: '', locale: 'en', castMethod: 'time' }),
+  'Prompt is required',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: '', locale: 'zh-CN', castMethod: 'time' }),
+  '请填写求问之事',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: '问事', locale: 'zh-CN' }),
+  '请选择起卦方式',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: 'Question', locale: 'en' }),
+  'Cast method is required',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: '问事', locale: 'zh-CN', castMethod: 'bogus' }),
+  '不支持的起卦方式',
+);
+assert.equal(
+  getCastRequestValidationError({ prompt: 'Question', locale: 'en', castMethod: 'bogus' }),
+  'Unsupported cast method',
+);
+assert.equal(
+  getCastRequestValidationError({
+    prompt: 'Question',
+    locale: 'en',
+    castMethod: 'numbers',
+    castPayload: { numbers: [1] },
+  }),
+  'Number Cast requires at least upper and lower numbers',
+);
 assert.equal(
   getCastRequestValidationError({
     prompt: '问事',
+    locale: 'zh-CN',
     castMethod: 'numbers',
     castPayload: { numbers: [1, 8] },
   }),
@@ -20,6 +75,7 @@ assert.equal(
 assert.equal(
   getCastRequestValidationError({
     prompt: '问事',
+    locale: 'zh-CN',
     castMethod: 'numbers',
     castPayload: { numbers: [1] },
   }),
@@ -28,6 +84,7 @@ assert.equal(
 assert.equal(
   getCastRequestValidationError({
     prompt: '问事',
+    locale: 'zh-CN',
     castMethod: 'numbers',
     castPayload: { numbers: [1, undefined, 6] },
   }),
@@ -37,6 +94,7 @@ for (const numbers of [[0, 8], [1, 1000], [1.5, 8], [1, 8, 1000], [1, 8, 0]]) {
   assert.equal(
     getCastRequestValidationError({
       prompt: '问事',
+      locale: 'zh-CN',
       castMethod: 'numbers',
       castPayload: { numbers },
     }),
@@ -47,6 +105,7 @@ for (const numbers of [[true, 8], [[1], 8], ['1', 8], [1, false], [1, 8, true]])
   assert.equal(
     getCastRequestValidationError({
       prompt: '问事',
+      locale: 'zh-CN',
       castMethod: 'numbers',
       castPayload: { numbers },
     }),
@@ -56,6 +115,7 @@ for (const numbers of [[true, 8], [[1], 8], ['1', 8], [1, false], [1, 8, true]])
 assert.equal(
   getCastRequestValidationError({
     prompt: '问事',
+    locale: 'zh-CN',
     castMethod: 'numbers',
     castPayload: { numbers: [999, 1, 999] },
   }),
@@ -77,11 +137,69 @@ const retryResult = await withGeminiHighDemandRetry(async () => {
 assert.equal(retryResult, 'ok');
 assert.equal(retryAttempts, 2);
 
-const fallback = buildLocalFallbackResponse(castMeihua('2026-04-28T13:34:52+08:00'));
-assert.equal(fallback.serviceNotice, AI_BUSY_NOTICE);
-assert.ok(fallback.serviceNotice.includes('5 分钟后再试'));
-assert.equal(fallback.mainHex.name, fallback.mainHexName);
-assert.equal(fallback.overallStatus, fallback.relation.status);
-assert.ok(fallback.meaning.includes(fallback.relation.summary));
+const englishCast = castMeihua('2026-04-28T13:34:52+08:00');
+const englishResponse = buildDivinationResponse(englishCast, {}, 'en');
+assert.equal(englishResponse.castMethodLabel, 'Time Cast');
+assert.equal(englishResponse.body.element, 'Water');
+assert.equal(englishResponse.mainHexName, englishCast.mainHex.name);
+assert.ok(!/[\u4e00-\u9fff]/.test(englishResponse.timeAnalysis));
+assert.ok(!/[\u4e00-\u9fff]/.test(englishResponse.mainHex.name));
+assert.ok(englishResponse.omenAnalysis.includes('No external omen'));
+for (const [label, value] of Object.entries({
+  castMethodLabel: englishResponse.castMethodLabel,
+  timeAnalysis: englishResponse.timeAnalysis,
+  formula: englishResponse.formula,
+  stabilityNote: englishResponse.stabilityNote ?? '',
+  mainHexName: englishResponse.mainHex.name,
+  mainHexMeaning: englishResponse.mainHex.meaning,
+  mutualHexName: englishResponse.mutualHex.name,
+  mutualHexMeaning: englishResponse.mutualHex.meaning,
+  changedHexName: englishResponse.changedHex.name,
+  changedHexMeaning: englishResponse.changedHex.meaning,
+  bodyName: englishResponse.body.name,
+  bodyElement: englishResponse.body.element,
+  useName: englishResponse.use.name,
+  useElement: englishResponse.use.element,
+  relation: englishResponse.relation.relation,
+  relationStatus: englishResponse.relation.status,
+  relationSummary: englishResponse.relation.summary,
+  seasonalSeasonName: englishResponse.seasonal.seasonName,
+  seasonalSeasonElement: englishResponse.seasonal.seasonElement,
+  seasonalBodyElement: englishResponse.seasonal.bodyElement,
+  seasonalStrength: englishResponse.seasonal.strength,
+  seasonalSummary: englishResponse.seasonal.summary,
+  omenSummary: englishResponse.omen.summary,
+  bodyUseAnalysis: englishResponse.bodyUseAnalysis,
+  fiveElementAnalysis: englishResponse.fiveElementAnalysis,
+  seasonalAnalysis: englishResponse.seasonalAnalysis,
+  omenAnalysis: englishResponse.omenAnalysis,
+  meaning: englishResponse.meaning,
+  advice: englishResponse.advice,
+  overallStatus: englishResponse.overallStatus,
+})) {
+  assertNoChineseText(String(value), label);
+}
+assert.equal(getServiceErrorMessage('en'), 'The interpretation service is temporarily unavailable. Please try again later.');
+assert.equal(getServiceErrorMessage('zh-CN'), '天机运转受阻，请稍后再试');
+assert.throws(
+  () => buildDivinationResponse(englishCast, { meaning: '这是中文泄漏', mainHex: { meaning: '本卦中文' } }, 'en'),
+  /English AI payload contains Chinese/,
+);
+assert.throws(
+  () => buildDivinationResponse(englishCast, { meaning: '㐀' }, 'en'),
+  /English AI payload contains Chinese/,
+);
+assert.throws(
+  () => displayRequired('en', '未映射中文', 'hexagram'),
+  /Missing English display mapping/,
+);
+assert.throws(
+  () => displayRequired('en', '㐀', 'hexagram'),
+  /Missing English display mapping/,
+);
+
+const englishPrompt = buildSystemPrompt(castMeihua('2026-04-28T13:34:52+08:00'), 'en');
+assert.ok(englishPrompt.includes('Output only English'));
+assert.ok(englishPrompt.includes('Do not include Chinese characters'));
 
 console.log('chat request validation tests passed');
