@@ -13,10 +13,23 @@ import InputView, {
 } from '../components/InputView';
 import LoadingView, { LOADING_SEQUENCE } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
+import { getTranslation, getTranslationKeys, translations } from '../i18n/translations';
+import { SUPPORTED_LOCALES } from '../i18n/types';
 import { castMeihua } from './meihua';
 
 const date = new Date('2026-04-28T08:09:10.000Z');
 assert.equal(getCastTimestamp(date), '2026-04-28T08:09:10.000Z');
+assert.deepEqual(SUPPORTED_LOCALES, ['zh-CN', 'en']);
+
+const zhKeys = getTranslationKeys('zh-CN');
+const enKeys = getTranslationKeys('en');
+assert.deepEqual(enKeys, zhKeys);
+assert.equal(getTranslation('zh-CN', 'header.language.zh'), '中文');
+assert.equal(getTranslation('en', 'header.language.en'), 'EN');
+assert.throws(
+  () => getTranslation('en', 'missing.translation.key' as keyof typeof translations.en),
+  /Missing translation/,
+);
 
 assert.equal(getVisualHexagram([7, 7, 7, 8, 8, 8]).name, '天地否');
 assert.equal(getVisualHexagram([8, 8, 8, 7, 7, 7]).name, '地天泰');
