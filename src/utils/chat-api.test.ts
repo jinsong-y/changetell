@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import {
   buildDivinationResponse,
   buildSystemPrompt,
+  DEFAULT_GEMINI_MODEL,
   getCastRequestValidationError,
+  getGeminiModelName,
   getServiceErrorMessage,
   isGeminiHighDemandError,
   normalizeLocale,
@@ -125,6 +127,9 @@ assert.equal(
 assert.equal(isGeminiHighDemandError({ status: 503 }), true);
 assert.equal(isGeminiHighDemandError(new Error('503 Service Unavailable: high demand')), true);
 assert.equal(isGeminiHighDemandError({ status: 429 }), false);
+assert.equal(DEFAULT_GEMINI_MODEL, 'gemini-2.5-flash-lite');
+assert.equal(getGeminiModelName(), 'gemini-2.5-flash-lite');
+assert.equal(getGeminiModelName(' gemini-custom-model '), 'gemini-custom-model');
 
 let retryAttempts = 0;
 const retryResult = await withGeminiHighDemandRetry(async () => {

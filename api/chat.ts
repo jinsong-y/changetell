@@ -25,6 +25,11 @@ type DivinationData = ReturnType<typeof castMeihua>;
 const isCastMethod = (value: unknown): value is CastMethod =>
   value === 'time' || value === 'numbers';
 
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
+
+export const getGeminiModelName = (modelName = process.env.GEMINI_MODEL) =>
+  modelName?.trim() || DEFAULT_GEMINI_MODEL;
+
 export const getServiceErrorMessage = (locale: Locale) =>
   locale === 'en'
     ? 'The interpretation service is temporarily unavailable. Please try again later.'
@@ -476,7 +481,7 @@ export default async function handler(req: any, res: any) {
     const systemPrompt = buildSystemPrompt(rawDivinationData, locale);
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
     const model = genAI.getGenerativeModel({
-      model: "gemini-3.1-flash-lite-preview",
+      model: getGeminiModelName(),
       generationConfig: { responseMimeType: "application/json" },
     });
 
