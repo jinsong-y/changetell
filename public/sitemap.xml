@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://changetell.vercel.app/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://changetell.vercel.app/zh/mei-hua-yi-shu/" />
+  </url>
+  <url>
+    <loc>https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://changetell.vercel.app/zh/mei-hua-yi-shu/" />
+  </url>
+  <url>
+    <loc>https://changetell.vercel.app/en/i-ching-number-cast/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://changetell.vercel.app/zh/baoshu-qigua/" />
+  </url>
+  <url>
+    <loc>https://changetell.vercel.app/zh/mei-hua-yi-shu/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/" />
+  </url>
+  <url>
+    <loc>https://changetell.vercel.app/zh/baoshu-qigua/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://changetell.vercel.app/en/i-ching-number-cast/" />
+  </url>
+</urlset>

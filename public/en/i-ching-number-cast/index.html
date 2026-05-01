@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta
+      name="description"
+      content="Learn how CHANGE_TELL handles I Ching number casting with deterministic upper trigram, lower trigram, and moving line calculation."
+    />
+    <link rel="canonical" href="https://changetell.vercel.app/en/i-ching-number-cast/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://changetell.vercel.app/zh/baoshu-qigua/" />
+    <title>I Ching Number Cast - CHANGE_TELL</title>
+    <style>
+      body{margin:0;font-family:Georgia,"Times New Roman",serif;background:#f6f1e7;color:#251f19;line-height:1.65}
+      main{max-width:820px;margin:0 auto;padding:56px 22px 72px}
+      h1{font-size:clamp(2.2rem,5vw,4.2rem);line-height:1;margin:0 0 22px}
+      h2{font-size:1.45rem;margin-top:38px}
+      a{color:#7a2717}
+      .eyebrow{font:700 .78rem system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6d5d4f}
+      .lead{font-size:1.2rem}
+      code{background:#e8decc;padding:.12em .35em;border-radius:4px}
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">CHANGE_TELL guide</p>
+      <h1>I Ching Number Cast</h1>
+      <p class="lead">
+        Number Cast in CHANGE_TELL lets a user enter numbers for a Mei Hua Yi Shu reading while keeping
+        the hexagram calculation transparent and repeatable.
+      </p>
+      <h2>How the numbers are used</h2>
+      <p>
+        The app accepts numbers from 1 to 999. The upper number maps to the upper trigram, the lower
+        number maps to the lower trigram, and an optional third number maps to the moving line. If the
+        moving number is not supplied, the app still applies a deterministic rule rather than asking AI
+        to decide.
+      </p>
+      <h2>Why deterministic casting matters</h2>
+      <p>
+        A deterministic number cast makes the boundary clear. The program performs the I Ching and Mei
+        Hua Yi Shu calculation. AI receives the calculated payload and writes interpretation, advice, and
+        plain-language explanation from those fixed values.
+      </p>
+      <h2>Best use cases</h2>
+      <p>
+        Number Cast is useful when a user has a spontaneous number, a set of meaningful numbers, or wants
+        to avoid repeating a time-based question in the same two-hour period.
+      </p>
+      <p><a href="/">Open CHANGE_TELL</a> · <a href="/en/mei-hua-yi-shu-calculator/">Mei Hua Yi Shu calculator</a></p>
+    </main>
+  </body>
+</html>

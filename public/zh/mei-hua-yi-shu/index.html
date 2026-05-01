@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta
+      name="description"
+      content="CHANGE_TELL 是一个确定性梅花易数与周易起卦工具，本地计算本卦、互卦、变卦、动爻、体用和五行生克，AI 只负责解释。"
+    />
+    <link rel="canonical" href="https://changetell.vercel.app/zh/mei-hua-yi-shu/" />
+    <link rel="alternate" hreflang="en" href="https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/" />
+    <title>梅花易数起卦工具 - CHANGE_TELL</title>
+    <style>
+      body{margin:0;font-family:"Songti SC","Noto Serif CJK SC",serif;background:#f6f1e7;color:#251f19;line-height:1.8}
+      main{max-width:820px;margin:0 auto;padding:56px 22px 72px}
+      h1{font-size:clamp(2.1rem,5vw,4.2rem);line-height:1.15;margin:0 0 22px}
+      h2{font-size:1.45rem;margin-top:38px}
+      a{color:#7a2717}
+      .eyebrow{font:700 .78rem system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6d5d4f}
+      .lead{font-size:1.18rem}
+      .panel{border-left:4px solid #9b3d24;padding-left:18px;margin:28px 0}
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">CHANGE_TELL 说明</p>
+      <h1>梅花易数起卦工具</h1>
+      <p class="lead">
+        CHANGE_TELL 是一个确定性的梅花易数与周易起卦应用。它先按本地规则计算卦象，再让 AI 根据固定结果写出解读。
+      </p>
+      <div class="panel">
+        <p>
+          关键边界是：AI 不决定本卦、互卦、变卦、动爻、体用、五行生克和吉凶。AI 只负责把已经算好的结果解释清楚。
+        </p>
+      </div>
+      <h2>它会计算什么</h2>
+      <p>
+        每次起卦时，CHANGE_TELL 会计算本卦、互卦、变卦、动爻、体卦、用卦、体用关系、五行生克状态和时令旺衰。
+        这些确定数据会被锁定，再交给 Gemini 输出结构化解读。
+      </p>
+      <h2>时间起卦与报数起卦</h2>
+      <p>
+        时间起卦使用确定的历法值。报数起卦允许用户输入上卦数、下卦数和可选动爻数。两种方式都遵循同一个原则：
+        先按规则排盘，再让 AI 表达。
+      </p>
+      <h2>适合谁使用</h2>
+      <p>
+        如果你希望使用梅花易数，但又不希望 AI 随机生成卦象，CHANGE_TELL 会更合适。它适合求问、学习、对照体用五行，
+        也适合需要中英文双语解释的用户。
+      </p>
+      <p><a href="/">打开 CHANGE_TELL</a> · <a href="/zh/baoshu-qigua/">阅读报数起卦说明</a></p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta
+      name="description"
+      content="了解 CHANGE_TELL 如何进行报数起卦：输入上卦数、下卦数和可选动爻数，由本地规则确定卦象和体用五行。"
+    />
+    <link rel="canonical" href="https://changetell.vercel.app/zh/baoshu-qigua/" />
+    <link rel="alternate" hreflang="en" href="https://changetell.vercel.app/en/i-ching-number-cast/" />
+    <title>报数起卦 - CHANGE_TELL</title>
+    <style>
+      body{margin:0;font-family:"Songti SC","Noto Serif CJK SC",serif;background:#f6f1e7;color:#251f19;line-height:1.8}
+      main{max-width:820px;margin:0 auto;padding:56px 22px 72px}
+      h1{font-size:clamp(2.1rem,5vw,4rem);line-height:1.15;margin:0 0 22px}
+      h2{font-size:1.45rem;margin-top:38px}
+      a{color:#7a2717}
+      .eyebrow{font:700 .78rem system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6d5d4f}
+      .lead{font-size:1.18rem}
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">CHANGE_TELL 说明</p>
+      <h1>报数起卦</h1>
+      <p class="lead">
+        报数起卦适合用户已有一组数字、临时取数，或不想在同一个时辰内重复时间起卦的情况。
+      </p>
+      <h2>数字如何使用</h2>
+      <p>
+        CHANGE_TELL 接受 1 到 999 的整数。第一个数字用于上卦，第二个数字用于下卦，第三个数字可用于动爻。
+        程序会把数字归一到八卦和六爻范围内，得出本卦、互卦、变卦和体用定位。
+      </p>
+      <h2>为什么要先算后解</h2>
+      <p>
+        报数起卦的重点是边界清楚：卦象和吉凶来自规则，不来自 AI 的自由发挥。AI 获得的是已经确定的排盘结果，
+        它负责把体用、五行、时令和建议写成用户能读懂的文字。
+      </p>
+      <h2>和时间起卦的区别</h2>
+      <p>
+        时间起卦依赖当前时间与历法；报数起卦依赖用户给出的数字。两者只是取数来源不同，后续的三卦、动爻、体用、
+        五行生克分析仍保持一致。
+      </p>
+      <p><a href="/">打开 CHANGE_TELL</a> · <a href="/zh/mei-hua-yi-shu/">梅花易数起卦工具</a></p>
+    </main>
+  </body>
+</html>

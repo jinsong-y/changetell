@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta
+      name="description"
+      content="A guide to CHANGE_TELL, a deterministic Mei Hua Yi Shu calculator that computes I Ching hexagrams locally before AI explains the fixed reading."
+    />
+    <link rel="canonical" href="https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://changetell.vercel.app/zh/mei-hua-yi-shu/" />
+    <link rel="alternate" hreflang="x-default" href="https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/" />
+    <title>Mei Hua Yi Shu Calculator - CHANGE_TELL</title>
+    <style>
+      body{margin:0;font-family:Georgia,"Times New Roman",serif;background:#f6f1e7;color:#251f19;line-height:1.65}
+      main{max-width:820px;margin:0 auto;padding:56px 22px 72px}
+      h1{font-size:clamp(2.25rem,5vw,4.5rem);line-height:1;margin:0 0 22px}
+      h2{font-size:1.45rem;margin-top:38px}
+      a{color:#7a2717}
+      .eyebrow{font:700 .78rem system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6d5d4f}
+      .lead{font-size:1.2rem}
+      .panel{border-left:4px solid #9b3d24;padding-left:18px;margin:28px 0}
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Mei Hua Yi Shu Calculator - CHANGE_TELL",
+        "inLanguage": "en",
+        "about": ["Mei Hua Yi Shu", "I Ching", "Plum Blossom Numerology"],
+        "mainEntityOfPage": "https://changetell.vercel.app/en/mei-hua-yi-shu-calculator/"
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">CHANGE_TELL guide</p>
+      <h1>Mei Hua Yi Shu Calculator</h1>
+      <p class="lead">
+        CHANGE_TELL is a deterministic Mei Hua Yi Shu and I Ching calculator. It calculates the
+        hexagram first, then asks AI to explain the fixed result in readable language.
+      </p>
+      <div class="panel">
+        <p>
+          The important distinction is simple: AI does not choose the hexagram, moving line, body/use
+          roles, five-element relation, or auspiciousness. Those values come from local rules.
+        </p>
+      </div>
+      <h2>What the app calculates</h2>
+      <p>
+        For each reading, CHANGE_TELL computes the original hexagram, mutual hexagram, changed hexagram,
+        moving line, body trigram, use trigram, body/use relation, five-element status, and seasonal
+        context. The result is then passed to Gemini as locked data for interpretation.
+      </p>
+      <h2>Time cast and number cast</h2>
+      <p>
+        Time Cast uses deterministic calendar values. Number Cast lets the user provide numbers for the
+        upper trigram, lower trigram, and optional moving line. Both modes use the same principle:
+        calculation first, explanation second.
+      </p>
+      <h2>Who it is for</h2>
+      <p>
+        CHANGE_TELL is for people who want an I Ching or Mei Hua Yi Shu reading without treating AI as
+        the source of randomness. It is especially useful when a user wants bilingual explanation,
+        transparent calculation, and a consistent structure for repeated study.
+      </p>
+      <p><a href="/">Open CHANGE_TELL</a> · <a href="/en/i-ching-number-cast/">Read the number cast guide</a></p>
+    </main>
+  </body>
+</html>
