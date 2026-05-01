@@ -16,6 +16,7 @@ import ResultView from '../components/ResultView';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { formatTranslation, getTranslation, getTranslationKeys, translate, translations } from '../i18n/translations';
 import { SUPPORTED_LOCALES } from '../i18n/types';
+import { getBinaryByHexName } from '../utils/iching';
 import { castMeihua } from './meihua';
 
 const date = new Date('2026-04-28T08:09:10.000Z');
@@ -49,6 +50,9 @@ assert.throws(
 
 assert.equal(getVisualHexagram([7, 7, 7, 8, 8, 8]).name, '天地否');
 assert.equal(getVisualHexagram([8, 8, 8, 7, 7, 7]).name, '地天泰');
+assert.equal(getBinaryByHexName('天地否'), '000111');
+assert.equal(getBinaryByHexName('天'), null);
+assert.equal(getBinaryByHexName('Force'), null);
 
 assert.deepEqual(getNumberCastPayload(['1', '8', '6']), { canCast: true, numbers: [1, 8, 6], error: '' });
 assert.deepEqual(getNumberCastPayload(['1', '8', '']), { canCast: true, numbers: [1, 8], error: '' });

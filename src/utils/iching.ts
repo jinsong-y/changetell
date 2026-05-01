@@ -6,7 +6,7 @@ export { HEXAGRAMS_TABLE, TRIGRAMS, type BinaryString, type TrigramName } from '
 export function getBinaryByHexName(name: string): string | null {
   for (const [upper, row] of Object.entries(HEXAGRAMS_TABLE)) {
     for (const [lower, hexName] of Object.entries(row)) {
-      if (hexName === name || name.includes(hexName) || hexName.includes(name)) {
+      if (hexName === name) {
         // 易经卦象是从下往上排，所以先放下卦，再放上卦
         return TRIGRAMS[lower as TrigramName] + TRIGRAMS[upper as TrigramName];
       }
