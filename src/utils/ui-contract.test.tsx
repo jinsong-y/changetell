@@ -153,6 +153,9 @@ const resultHtml = renderWithLocale(
       mainHex: { name: cast.mainHex.name, meaning: '本卦表示当前。' },
       mutualHex: { name: cast.mutualHex.name, meaning: '互卦表示隐情。' },
       changedHex: { name: cast.changedHex.name, meaning: '变卦表示趋势。' },
+      mainHexName: cast.mainHex.name,
+      mutualHexName: cast.mutualHex.name,
+      changedHexName: cast.changedHex.name,
       movingLine: cast.movingLine,
       body: cast.body,
       use: cast.use,
@@ -255,5 +258,36 @@ for (const text of ['Three Hexagrams', 'Body Trigram', 'Five-Element Judgment', 
 for (const text of ['排出三卦', '体卦', '五行生克论吉凶', '再起一卦']) {
   assert.ok(!englishResultHtml.includes(text), `English result leaked Chinese text: ${text}`);
 }
+
+assert.throws(
+  () => renderWithLocale(
+    'en',
+    <ResultView
+      data={{
+        timeAnalysis: 'Time Cast',
+        mainHex: { name: 'Force', meaning: 'Meaning' },
+        mutualHex: { name: 'Field', meaning: 'Meaning' },
+        changedHex: { name: 'Sprouting', meaning: 'Meaning' },
+        mainHexName: 'Force',
+        mutualHexName: cast.mutualHex.name,
+        changedHexName: cast.changedHex.name,
+        body: { ...cast.body, name: 'Heaven', element: 'Metal' },
+        use: { ...cast.use, name: 'Lake', element: 'Metal' },
+        relation: { relation: 'Same Element', status: 'Very Auspicious', summary: 'Body and use share the same element.' },
+        seasonal: { ...cast.seasonal, bodyElement: 'Metal', seasonName: 'Spring', strength: 'Resting', summary: 'Seasonal force is supportive only as context.' },
+        omen: { used: false, summary: 'No omen was taken.' },
+        bodyUseAnalysis: 'Body and use are clearly positioned.',
+        fiveElementAnalysis: 'The five-element relation is favorable.',
+        seasonalAnalysis: 'Season is considered as secondary context.',
+        omenAnalysis: 'No external omen was collected.',
+        meaning: 'The reading is coherent.',
+        advice: 'Proceed steadily.',
+        overallStatus: 'Very Auspicious',
+      }}
+      onRestart={() => {}}
+    />,
+  ),
+  /Unknown hexagram name for rendering: Force/,
+);
 
 console.log('ui contract tests passed');

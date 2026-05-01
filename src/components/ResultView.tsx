@@ -7,10 +7,12 @@ type LineType = 'yin' | 'yang';
 
 const BigHexagram = ({ name, title, subtitle }: { name: string, title: string, subtitle: string }) => {
   const binary = getBinaryByHexName(name);
+  if (!binary) {
+    throw new Error(`Unknown hexagram name for rendering: ${name}`);
+  }
+
   // 转换二进制到 LineType，注意易经从下往上，渲染从上往下
-  const lines: LineType[] = binary 
-    ? binary.split('').reverse().map(b => b === '1' ? 'yang' : 'yin')
-    : ['yang', 'yang', 'yang', 'yang', 'yang', 'yang'];
+  const lines: LineType[] = binary.split('').reverse().map(b => b === '1' ? 'yang' : 'yin');
 
   return (
     <div className="p-6 md:p-8 flex flex-col items-center justify-center gap-4 bg-[#0c0e13] relative border border-[#414868]/50 w-full h-full group/hex transition-colors hover:border-[#7aa2f7]/30">
@@ -85,7 +87,7 @@ interface OmenAnalysis {
   summary: string;
 }
 
-interface DivinationResult {
+export interface DivinationResult {
   castMethod?: 'time' | 'numbers';
   castMethodLabel?: string;
   timeAnalysis: string;
@@ -95,9 +97,9 @@ interface DivinationResult {
   mainHex: HexInfo;
   mutualHex: HexInfo;
   changedHex: HexInfo;
-  mainHexName?: string;
-  mutualHexName?: string;
-  changedHexName?: string;
+  mainHexName: string;
+  mutualHexName: string;
+  changedHexName: string;
   movingLine?: number;
   body: TrigramRole;
   use: TrigramRole;
@@ -202,19 +204,19 @@ export default function ResultView({ data, onRestart }: { data: DivinationResult
             <SectionLabel step="01" title={t('result.section.hexagrams')} tone="border-[#7aa2f7] text-[#7aa2f7]" />
             <div className="grid grid-cols-1 xl:grid-cols-3 min-w-0">
               <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50 min-w-0">
-                <BigHexagram name={data.mainHexName ?? data.mainHex.name} title={data.mainHex.name} subtitle={t('result.hex.originalSubtitle')} />
+                <BigHexagram name={data.mainHexName} title={data.mainHex.name} subtitle={t('result.hex.originalSubtitle')} />
                 <div className="p-6 border-t border-[#414868]/50 min-w-0">
                   <p className="text-sm text-[#8a98c9] leading-relaxed break-words">{data.mainHex.meaning}</p>
                 </div>
               </div>
               <div className="border-b xl:border-b-0 xl:border-r border-[#414868]/50 min-w-0">
-                <BigHexagram name={data.mutualHexName ?? data.mutualHex.name} title={data.mutualHex.name} subtitle={t('result.hex.mutualSubtitle')} />
+                <BigHexagram name={data.mutualHexName} title={data.mutualHex.name} subtitle={t('result.hex.mutualSubtitle')} />
                 <div className="p-6 border-t border-[#414868]/50 min-w-0">
                   <p className="text-sm text-[#8a98c9] leading-relaxed break-words">{data.mutualHex.meaning}</p>
                 </div>
               </div>
               <div className="min-w-0">
-                <BigHexagram name={data.changedHexName ?? data.changedHex.name} title={data.changedHex.name} subtitle={t('result.hex.changedSubtitle')} />
+                <BigHexagram name={data.changedHexName} title={data.changedHex.name} subtitle={t('result.hex.changedSubtitle')} />
                 <div className="p-6 border-t border-[#414868]/50 min-w-0">
                   <p className="text-sm text-[#8a98c9] leading-relaxed break-words">{data.changedHex.meaning}</p>
                 </div>

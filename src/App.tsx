@@ -6,14 +6,14 @@ import InputView, {
   type CastOptions,
   type TimeCastRecord,
 } from './components/InputView';
-import ResultView from './components/ResultView';
+import ResultView, { type DivinationResult } from './components/ResultView';
 import LoadingView from './components/LoadingView';
 import { useI18n } from './i18n/useI18n';
 
 export default function App() {
   const { locale, t } = useI18n();
   const [view, setView] = useState<'input' | 'loading' | 'result'>('input');
-  const [resultData, setResultData] = useState<any>(null);
+  const [resultData, setResultData] = useState<DivinationResult | null>(null);
   const [error, setError] = useState('');
   const [timeCastRecords, setTimeCastRecords] = useState<TimeCastRecord[]>([]);
   const [repeatWarning, setRepeatWarning] = useState('');
