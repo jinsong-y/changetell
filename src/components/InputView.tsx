@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { displayRequired } from '../../api/locale';
+import { displayRequired } from '../i18n/display';
 import { useI18n } from '../i18n/useI18n';
 import type { Locale } from '../i18n/types';
 import { HEXAGRAMS_TABLE, TRIGRAMS, type TrigramName } from '../utils/iching';

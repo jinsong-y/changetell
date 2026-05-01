@@ -2,8 +2,6 @@ import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_LOCALE, isLocale, type Locale } from './types';
 import { translate, type TranslationKey } from './translations';
 
-const STORAGE_KEY = 'change-tell-locale';
-
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -12,14 +10,17 @@ interface I18nContextValue {
 
 export const I18nContext = createContext<I18nContextValue | null>(null);
 
-const readInitialLocale = (initialLocale?: Locale): Locale => {
+export const STORAGE_KEY = 'change-tell-locale';
+
+export const readInitialLocale = (initialLocale?: Locale): Locale => {
   if (initialLocale) return initialLocale;
   if (typeof window === 'undefined') return DEFAULT_LOCALE;
 
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (!saved) return DEFAULT_LOCALE;
   if (!isLocale(saved)) {
-    throw new Error(`Unsupported saved locale: ${saved}`);
+    window.localStorage.removeItem(STORAGE_KEY);
+    return DEFAULT_LOCALE;
   }
   return saved;
 };

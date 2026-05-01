@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import InputView, {
@@ -14,11 +15,27 @@ import InputView, {
 import Header from '../components/Header';
 import LoadingView, { LOADING_SEQUENCE_KEYS } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
-import { I18nProvider } from '../i18n/I18nProvider';
+import { I18nProvider, readInitialLocale } from '../i18n/I18nProvider';
 import { formatTranslation, getTranslation, getTranslationKeys, translate, translations } from '../i18n/translations';
 import { SUPPORTED_LOCALES } from '../i18n/types';
 import { getBinaryByHexName } from '../utils/iching';
 import { castMeihua } from './meihua';
+
+const frontendRuntimeFiles = [
+  'src/App.tsx',
+  'src/components/InputView.tsx',
+  'src/components/LoadingView.tsx',
+  'src/components/ResultView.tsx',
+  'src/components/Header.tsx',
+  'src/i18n/I18nProvider.tsx',
+  'src/i18n/translations.ts',
+  'src/i18n/useI18n.ts',
+  'src/utils/iching.ts',
+];
+for (const file of frontendRuntimeFiles) {
+  const source = readFileSync(file, 'utf8');
+  assert.ok(!source.includes('../../api/'), `${file} imports server API modules into browser runtime`);
+}
 
 const date = new Date('2026-04-28T08:09:10.000Z');
 const renderWithLocale = (locale: 'zh-CN' | 'en', element: React.ReactElement) =>
@@ -29,6 +46,21 @@ const assertNoChinese = (html: string, label: string) => {
 
 assert.equal(getCastTimestamp(date), '2026-04-28T08:09:10.000Z');
 assert.deepEqual(SUPPORTED_LOCALES, ['zh-CN', 'en']);
+{
+  const originalWindow = (globalThis as any).window;
+  const storageState: Record<string, string | null> = { 'change-tell-locale': 'zh' };
+  (globalThis as any).window = {
+    localStorage: {
+      getItem: (key: string) => storageState[key] ?? null,
+      removeItem: (key: string) => {
+        storageState[key] = null;
+      },
+    },
+  };
+  assert.equal(readInitialLocale(), 'zh-CN');
+  assert.equal(storageState['change-tell-locale'], null);
+  (globalThis as any).window = originalWindow;
+}
 
 const zhKeys = getTranslationKeys('zh-CN');
 const enKeys = getTranslationKeys('en');
