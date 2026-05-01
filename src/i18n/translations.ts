@@ -154,15 +154,32 @@ export const getTranslation = (locale: Locale, key: TranslationKey): string => {
   return value;
 };
 
+const getInterpolationTokens = (template: string) =>
+  Array.from(new Set(Array.from(template.matchAll(/\{(\w+)\}/g), ([, token]) => token)));
+
+export const translate = (
+  locale: Locale,
+  key: TranslationKey,
+  values?: Record<string, string | number>,
+): string => {
+  const template = getTranslation(locale, key);
+  const tokens = getInterpolationTokens(template);
+
+  for (const token of tokens) {
+    if (!values || values[token] === undefined) {
+      throw new Error(`Missing interpolation value ${token} for ${locale}:${String(key)}`);
+    }
+  }
+
+  if (tokens.length === 0) {
+    return template;
+  }
+
+  return template.replace(/\{(\w+)\}/g, (_, token: string) => String(values?.[token]));
+};
+
 export const formatTranslation = (
   locale: Locale,
   key: TranslationKey,
   values: Record<string, string | number>,
-) =>
-  getTranslation(locale, key).replace(/\{(\w+)\}/g, (_, token: string) => {
-    const value = values[token];
-    if (value === undefined) {
-      throw new Error(`Missing interpolation value ${token} for ${locale}:${String(key)}`);
-    }
-    return String(value);
-  });
+) => translate(locale, key, values);

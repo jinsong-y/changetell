@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_LOCALE, isLocale, type Locale } from './types';
-import { formatTranslation, getTranslation, type TranslationKey } from './translations';
+import { translate, type TranslationKey } from './translations';
 
 const STORAGE_KEY = 'change-tell-locale';
 
@@ -46,7 +46,7 @@ export function I18nProvider({
     () => ({
       locale,
       setLocale: setLocaleState,
-      t: (key, values) => (values ? formatTranslation(locale, key, values) : getTranslation(locale, key)),
+      t: (key, values) => translate(locale, key, values),
     }),
     [locale],
   );

@@ -13,7 +13,7 @@ import InputView, {
 } from '../components/InputView';
 import LoadingView, { LOADING_SEQUENCE } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
-import { getTranslation, getTranslationKeys, translations } from '../i18n/translations';
+import { formatTranslation, getTranslation, getTranslationKeys, translate, translations } from '../i18n/translations';
 import { SUPPORTED_LOCALES } from '../i18n/types';
 import { castMeihua } from './meihua';
 
@@ -26,6 +26,8 @@ const enKeys = getTranslationKeys('en');
 assert.deepEqual(enKeys, zhKeys);
 assert.equal(getTranslation('zh-CN', 'header.language.zh'), '中文');
 assert.equal(getTranslation('en', 'header.language.en'), 'EN');
+assert.throws(() => translate('en', 'result.status.movingLine'), /Missing interpolation value line/);
+assert.equal(formatTranslation('en', 'result.status.movingLine', { line: 3 }), 'Moving Line: Line 3');
 assert.equal(getTranslation('zh-CN', 'input.repeat.warning'), '同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。');
 assert.equal(
   getTranslation('en', 'input.repeat.warning'),
