@@ -22,6 +22,9 @@ import { castMeihua } from './meihua';
 const date = new Date('2026-04-28T08:09:10.000Z');
 const renderWithLocale = (locale: 'zh-CN' | 'en', element: React.ReactElement) =>
   renderToStaticMarkup(<I18nProvider initialLocale={locale}>{element}</I18nProvider>);
+const assertNoChinese = (html: string, label: string) => {
+  assert.ok(!/\p{Script=Han}/u.test(html), `${label} contains Chinese characters`);
+};
 
 assert.equal(getCastTimestamp(date), '2026-04-28T08:09:10.000Z');
 assert.deepEqual(SUPPORTED_LOCALES, ['zh-CN', 'en']);
@@ -222,10 +225,12 @@ for (const text of ['Cast', 'Time Cast', 'Number Cast', 'Enter your question', '
 for (const text of ['起卦', '报数起卦', '输入求问之事']) {
   assert.ok(!englishInputHtml.includes(text), `English input leaked Chinese text: ${text}`);
 }
+assertNoChinese(englishInputHtml, 'English input HTML');
 
 const englishLoadingHtml = renderWithLocale('en', <LoadingView />);
 assert.ok(englishLoadingHtml.includes('Casting'));
 assert.ok(!englishLoadingHtml.includes('正在起卦'));
+assertNoChinese(englishLoadingHtml, 'English loading HTML');
 
 const englishResultHtml = renderWithLocale(
   'en',
@@ -262,6 +267,7 @@ for (const text of ['Three Hexagrams', 'Body Trigram', 'Five-Element Judgment', 
 for (const text of ['排出三卦', '体卦', '五行生克论吉凶', '再起一卦']) {
   assert.ok(!englishResultHtml.includes(text), `English result leaked Chinese text: ${text}`);
 }
+assertNoChinese(englishResultHtml, 'English result HTML');
 
 assert.throws(
   () => renderWithLocale(

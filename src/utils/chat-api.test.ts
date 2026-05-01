@@ -11,6 +11,10 @@ import {
 import { displayRequired } from '../../api/locale';
 import { castMeihua } from './meihua';
 
+const assertNoChineseText = (value: string, label: string) => {
+  assert.ok(!/\p{Script=Han}/u.test(value), `${label} contains Chinese characters`);
+};
+
 assert.equal(normalizeLocale('zh-CN'), 'zh-CN');
 assert.equal(normalizeLocale('en'), 'en');
 assert.equal(normalizeLocale(undefined), null);
@@ -121,6 +125,24 @@ assert.equal(englishResponse.mainHexName, englishCast.mainHex.name);
 assert.ok(!/[\u4e00-\u9fff]/.test(englishResponse.timeAnalysis));
 assert.ok(!/[\u4e00-\u9fff]/.test(englishResponse.mainHex.name));
 assert.ok(englishResponse.omenAnalysis.includes('No external omen'));
+for (const [label, value] of Object.entries({
+  timeAnalysis: englishResponse.timeAnalysis,
+  mainHexDisplayName: englishResponse.mainHex.name,
+  mutualHexDisplayName: englishResponse.mutualHex.name,
+  changedHexDisplayName: englishResponse.changedHex.name,
+  bodyName: englishResponse.body.name,
+  bodyElement: englishResponse.body.element,
+  useName: englishResponse.use.name,
+  useElement: englishResponse.use.element,
+  relation: englishResponse.relation.relation,
+  relationStatus: englishResponse.relation.status,
+  seasonalSummary: englishResponse.seasonal.summary,
+  omenAnalysis: englishResponse.omenAnalysis,
+  advice: englishResponse.advice,
+  overallStatus: englishResponse.overallStatus,
+})) {
+  assertNoChineseText(String(value), label);
+}
 assert.equal(getServiceErrorMessage('en'), 'The interpretation service is temporarily unavailable. Please try again later.');
 assert.equal(getServiceErrorMessage('zh-CN'), '天机运转受阻，请稍后再试');
 assert.throws(

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { displayRequired } from '../../api/locale';
 import { useI18n } from '../i18n/useI18n';
 import type { Locale } from '../i18n/types';
 import { HEXAGRAMS_TABLE, TRIGRAMS, type TrigramName } from '../utils/iching';
@@ -183,6 +184,7 @@ export default function InputView({
         : numberCastPayload.error;
   const displayUpperTri = TRIGRAM_DISPLAY_NAMES[locale][upperTri];
   const displayLowerTri = TRIGRAM_DISPLAY_NAMES[locale][lowerTri];
+  const displayHexName = displayRequired(locale, hexName, 'hexagram');
 
   const handleCastClick = () => {
     if (canCast) {
@@ -409,7 +411,7 @@ export default function InputView({
               className="text-center w-full border-t border-[#414868] pt-4 mb-2"
             >
               <h2 className="text-2xl font-bold text-[#c0caf5] tracking-widest drop-shadow-sm">
-                <span>{hexName}</span>
+                <span>{displayHexName}</span>
               </h2>
               <p className="text-xs font-medium text-[#565f89] mt-2 tracking-widest">
                 {t('input.matrix.upperLower', { upper: displayUpperTri, lower: displayLowerTri })}
