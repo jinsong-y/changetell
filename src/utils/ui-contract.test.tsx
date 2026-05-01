@@ -11,13 +11,17 @@ import InputView, {
   normalizePromptForRepeat,
   type InputViewProps,
 } from '../components/InputView';
-import LoadingView, { LOADING_SEQUENCE } from '../components/LoadingView';
+import LoadingView, { LOADING_SEQUENCE_KEYS } from '../components/LoadingView';
 import ResultView from '../components/ResultView';
+import { I18nProvider } from '../i18n/I18nProvider';
 import { formatTranslation, getTranslation, getTranslationKeys, translate, translations } from '../i18n/translations';
 import { SUPPORTED_LOCALES } from '../i18n/types';
 import { castMeihua } from './meihua';
 
 const date = new Date('2026-04-28T08:09:10.000Z');
+const renderWithLocale = (locale: 'zh-CN' | 'en', element: React.ReactElement) =>
+  renderToStaticMarkup(<I18nProvider initialLocale={locale}>{element}</I18nProvider>);
+
 assert.equal(getCastTimestamp(date), '2026-04-28T08:09:10.000Z');
 assert.deepEqual(SUPPORTED_LOCALES, ['zh-CN', 'en']);
 
@@ -126,8 +130,8 @@ const continueTimeContract: InputViewProps['onContinueTime'] = (prompt: string, 
 };
 continueTimeContract?.('当前问题', getCastTimestamp(date));
 
-assert.ok(LOADING_SEQUENCE.includes('定体用生克...'));
-assert.ok(!LOADING_SEQUENCE.some((step) => step.includes('爻辞')));
+assert.ok(LOADING_SEQUENCE_KEYS.includes('loading.step.4'));
+assert.ok(!LOADING_SEQUENCE_KEYS.some((step) => step.includes('爻辞')));
 
 const cast = castMeihua('2020-05-23T12:00:00+08:00');
 const relationSummary = {
@@ -139,7 +143,8 @@ const relationSummary = {
 }[cast.relation.relation];
 const seasonalSummary = `体卦属${cast.seasonal.bodyElement}，时令为${cast.seasonal.seasonName}，体气为${cast.seasonal.strength}。时令只作辅助，不覆盖体用生克主断。`;
 
-const resultHtml = renderToStaticMarkup(
+const resultHtml = renderWithLocale(
+  'zh-CN',
   <ResultView
     data={{
       timeAnalysis: cast.timeInfo,
@@ -171,12 +176,13 @@ for (const text of ['01', '排出三卦', '02', '分辨体用', '03', '五行生
 }
 assert.ok(!resultHtml.includes('undefined'));
 
-const inputHtml = renderToStaticMarkup(<InputView onCast={() => {}} />);
+const inputHtml = renderWithLocale('zh-CN', <InputView onCast={() => {}} />);
 assert.ok(inputHtml.includes('输入求问之事'));
 assert.ok(inputHtml.includes('报数起卦'));
 assert.ok(inputHtml.includes('优先以当前时辰起卦'));
 
-const repeatWarningHtml = renderToStaticMarkup(
+const repeatWarningHtml = renderWithLocale(
+  'zh-CN',
   <InputView
     onCast={() => {}}
     repeatWarning="同一时辰内相同问题不宜重复起卦。若此念已变，可改用报数起卦。"
@@ -188,7 +194,7 @@ assert.ok(repeatWarningHtml.includes('同一时辰内相同问题不宜重复起
 assert.ok(repeatWarningHtml.includes('改用报数起卦'));
 assert.ok(repeatWarningHtml.includes('仍用时辰起卦'));
 
-const numberInputHtml = renderToStaticMarkup(<InputView onCast={() => {}} initialCastMethod="numbers" />);
+const numberInputHtml = renderWithLocale('zh-CN', <InputView onCast={() => {}} initialCastMethod="numbers" />);
 for (const text of [
   '静心后，随心写下 2 到 3 个整数。不必计算，不必选吉数。',
   '随心第一个整数',
@@ -199,7 +205,55 @@ for (const text of [
   assert.ok(numberInputHtml.includes(text), `missing ${text}`);
 }
 
-const loadingHtml = renderToStaticMarkup(<LoadingView />);
+const loadingHtml = renderWithLocale('zh-CN', <LoadingView />);
 assert.ok(loadingHtml.includes('正在起卦'));
+
+const englishInputHtml = renderWithLocale('en', <InputView onCast={() => {}} initialCastMethod="numbers" />);
+for (const text of ['Cast', 'Time Cast', 'Number Cast', 'Enter your question', 'Upper Number', 'Range: 1-999']) {
+  assert.ok(englishInputHtml.includes(text), `missing English input text: ${text}`);
+}
+for (const text of ['起卦', '报数起卦', '输入求问之事']) {
+  assert.ok(!englishInputHtml.includes(text), `English input leaked Chinese text: ${text}`);
+}
+
+const englishLoadingHtml = renderWithLocale('en', <LoadingView />);
+assert.ok(englishLoadingHtml.includes('Casting'));
+assert.ok(!englishLoadingHtml.includes('正在起卦'));
+
+const englishResultHtml = renderWithLocale(
+  'en',
+  <ResultView
+    data={{
+      timeAnalysis: 'Time Cast: Jia-Zi year, first month, first day, Zi hour.',
+      formula: 'Upper: (1+1+1)%8=3; Lower: (1+1+1+1)%8=4; Moving Line: 4',
+      mainHex: { name: 'Force', meaning: 'The original pattern shows active force.' },
+      mutualHex: { name: 'Field', meaning: 'The inner process asks for receptivity.' },
+      changedHex: { name: 'Sprouting', meaning: 'The final tendency is early growth.' },
+      mainHexName: cast.mainHex.name,
+      mutualHexName: cast.mutualHex.name,
+      changedHexName: cast.changedHex.name,
+      movingLine: cast.movingLine,
+      body: { ...cast.body, name: 'Heaven', element: 'Metal' },
+      use: { ...cast.use, name: 'Lake', element: 'Metal' },
+      relation: { relation: 'Same Element', status: 'Very Auspicious', summary: 'Body and use share the same element.' },
+      seasonal: { ...cast.seasonal, bodyElement: 'Metal', seasonName: 'Spring', strength: 'Resting', summary: 'Seasonal force is supportive only as context.' },
+      omen: { used: false, summary: 'No omen was taken.' },
+      bodyUseAnalysis: 'Body and use are clearly positioned.',
+      fiveElementAnalysis: 'The five-element relation is favorable.',
+      seasonalAnalysis: 'Season is considered as secondary context.',
+      omenAnalysis: 'No external omen was collected.',
+      meaning: 'The reading is coherent.',
+      advice: 'Proceed steadily.',
+      overallStatus: 'Very Auspicious',
+    }}
+    onRestart={() => {}}
+  />,
+);
+for (const text of ['Three Hexagrams', 'Body Trigram', 'Five-Element Judgment', 'Core Advice', 'Cast Again']) {
+  assert.ok(englishResultHtml.includes(text), `missing English result text: ${text}`);
+}
+for (const text of ['排出三卦', '体卦', '五行生克论吉凶', '再起一卦']) {
+  assert.ok(!englishResultHtml.includes(text), `English result leaked Chinese text: ${text}`);
+}
 
 console.log('ui contract tests passed');
