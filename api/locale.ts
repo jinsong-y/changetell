@@ -124,7 +124,9 @@ export const HEXAGRAM_EN: Record<string, string> = {
   坤为地: 'Field',
 };
 
-const CJK_PATTERN = /[\u4e00-\u9fff]/;
+const HAN_SCRIPT_PATTERN = /\p{Script=Han}/u;
+
+export const containsHanScript = (value: string) => HAN_SCRIPT_PATTERN.test(value);
 
 const displayEnglish = (value: string) =>
   HEXAGRAM_EN[value]
@@ -144,7 +146,7 @@ export const displayRequired = (locale: Locale, value: string, category: string)
   if (locale === 'zh-CN') return value;
   const mapped = displayEnglish(value);
   if (mapped) return mapped;
-  if (CJK_PATTERN.test(value)) {
+  if (containsHanScript(value)) {
     throw new Error(`Missing English display mapping for ${category}: ${value}`);
   }
   return value;

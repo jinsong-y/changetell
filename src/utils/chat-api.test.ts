@@ -128,7 +128,15 @@ assert.throws(
   /English AI payload contains Chinese/,
 );
 assert.throws(
+  () => buildDivinationResponse(englishCast, { meaning: '㐀' }, 'en'),
+  /English AI payload contains Chinese/,
+);
+assert.throws(
   () => displayRequired('en', '未映射中文', 'hexagram'),
+  /Missing English display mapping/,
+);
+assert.throws(
+  () => displayRequired('en', '㐀', 'hexagram'),
   /Missing English display mapping/,
 );
 

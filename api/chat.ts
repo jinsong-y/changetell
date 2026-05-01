@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { castByNumbers, castMeihua, type CastMethod } from "./meihua.js";
-import { displayRequired, normalizeLocale, type Locale } from './locale.js';
+import { containsHanScript, displayRequired, normalizeLocale, type Locale } from './locale.js';
 
 export { normalizeLocale };
 
@@ -208,10 +208,8 @@ const asText = (value: unknown, fallback: string) =>
 const asObject = (value: unknown) =>
   value && typeof value === 'object' ? value as Record<string, unknown> : {};
 
-const CJK_PATTERN = /[\u4e00-\u9fff]/;
-
 const assertEnglishAiText = (value: unknown, path: string) => {
-  if (typeof value === 'string' && CJK_PATTERN.test(value)) {
+  if (typeof value === 'string' && containsHanScript(value)) {
     throw new Error(`English AI payload contains Chinese at ${path}`);
   }
 };
